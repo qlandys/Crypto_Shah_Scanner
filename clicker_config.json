@@ -1,0 +1,7 @@
+{
+    "left_click": "mouse5",
+    "right_click": "mouse4",
+    "speed_slow": "left",
+    "speed_medium": "down",
+    "speed_fast": "right"
+}
