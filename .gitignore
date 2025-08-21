@@ -1,0 +1,11 @@
+__pycache__/
+
+batch_scan.log
+
+crypto_scanner.log
+
+clicker_config.json
+
+parser_debug.log
+
+main.spec
