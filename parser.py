@@ -9,6 +9,8 @@ import multiprocessing
 import threading
 from queue import Queue
 from datetime import datetime, timedelta
+import concurrent.futures
+from tqdm import tqdm
 
 multiprocessing.freeze_support()
 
@@ -27,121 +29,111 @@ if not logger.handlers:
 
 
 class TradingViewParser:
-    _instances = {}
-    _lock = threading.Lock()
-
-    def __new__(cls, headless=True, instance_id="default"):
-        with cls._lock:
-            if instance_id not in cls._instances:
-                instance = super(TradingViewParser, cls).__new__(cls)
-                cls._instances[instance_id] = instance
-                instance._initialized = False
-            return cls._instances[instance_id]
+    _browser = None
+    _playwright = None
+    _browser_lock = threading.Lock()
+    _instance_count = 0
 
     def __init__(self, headless=True, instance_id="default"):
-        if self._initialized:
-            return
-
         self.headless = headless
         self.instance_id = instance_id
-        self.playwright = None
-        self.browser = None
         self.context = None
         self.page = None
         self._closed = False
-        self._initialized = True
-        self._request_queue = Queue()
-        self._result_queue = Queue()
-        self._worker_thread = None
 
-        logger.info(f"Инициализация парсера (ID: {instance_id})")
-        self._start_worker()
+        with TradingViewParser._browser_lock:
+            TradingViewParser._instance_count += 1
 
-    def _start_worker(self):
-        """Запускаем фоновый поток для обработки запросов"""
-        self._worker_thread = threading.Thread(target=self._process_requests, daemon=True)
-        self._worker_thread.start()
+        # Инициализируем браузер только если он еще не создан
+        if TradingViewParser._browser is None:
+            self._init_browser()
 
-    def _process_requests(self):
-        """Обрабатывает запросы в фоновом режиме"""
-        try:
-            self.playwright = sync_playwright().start()
-
-            launch_options = {
-                "headless": self.headless,
-                "args": [
-                    "--disable-blink-features=AutomationControlled",
-                    "--disable-infobars",
-                    "--disable-web-security",
-                    "--disable-site-isolation-trials",
-                    "--disable-features=IsolateOrigins,site-per-process",
-                    "--disable-dev-shm-usage",
-                    "--no-sandbox",
-                    "--disable-gpu",
-                    "--disable-software-rasterizer",
-                    "--disable-setuid-sandbox",
-                    "--disable-breakpad",
-                    "--disable-background-networking",
-                    "--disable-default-apps",
-                    "--disable-extensions",
-                    "--disable-sync",
-                    "--disable-translate",
-                    "--metrics-recording-only",
-                    "--no-first-run",
-                    "--mute-audio",
-                    "--safebrowsing-disable-auto-update",
-                    "--ignore-certificate-errors",
-                ],
-                "timeout": 60000
-            }
-
-            self.browser = self.playwright.chromium.launch(**launch_options)
-            logger.info("Браузер успешно запущен")
-
-            self.context = self.browser.new_context(
-                locale="ru-RU",
-                timezone_id="Europe/Moscow",
-                permissions=[],
-                geolocation={"longitude": random.uniform(30, 40), "latitude": random.uniform(50, 60)},
-                color_scheme="light",
-                ignore_https_errors=True,
-                java_script_enabled=True,
-                offline=False,
-                storage_state=None,
-                viewport={"width": 1280, "height": 720}
-            )
-            logger.info("Контекст браузера создан")
-
-            self.context.add_init_script("""
-                delete navigator.__proto__.webdriver;
-                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
-                Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
-                Object.defineProperty(navigator, 'languages', {get: () => ['ru-RU', 'ru']};
-            """)
-
-            # Обрабатываем запросы в бесконечном цикле
-            while True:
-                coin_name = self._request_queue.get()
-                if coin_name is None:  # Сигнал остановки
-                    break
-
+    def _init_browser(self):
+        """Инициализация браузера (только один раз)"""
+        with TradingViewParser._browser_lock:
+            if TradingViewParser._browser is None:
                 try:
-                    result = self._parse_coin_internal(coin_name)
-                    self._result_queue.put((coin_name, result))
+                    TradingViewParser._playwright = sync_playwright().start()
+
+                    launch_options = {
+                        "headless": self.headless,
+                        "args": [
+                            "--disable-blink-features=AutomationControlled",
+                            "--disable-infobars",
+                            "--disable-web-security",
+                            "--disable-site-isolation-trials",
+                            "--disable-features=IsolateOrigins,site-per-process",
+                            "--disable-dev-shm-usage",
+                            "--no-sandbox",
+                            "--disable-gpu",
+                            "--disable-software-rasterizer",
+                            "--disable-setuid-sandbox",
+                            "--disable-breakpad",
+                            "--disable-background-networking",
+                            "--disable-default-apps",
+                            "--disable-extensions",
+                            "--disable-sync",
+                            "--disable-translate",
+                            "--metrics-recording-only",
+                            "--no-first-run",
+                            "--mute-audio",
+                            "--safebrowsing-disable-auto-update",
+                            "--ignore-certificate-errors",
+                            "--aggressive-cache-discard",
+                            "--disable-application-cache",
+                            "--disable-offline-load-stale-cache",
+                            "--disk-cache-size=0",
+                            "--media-cache-size=0",
+                        ],
+                        "timeout": 60000
+                    }
+
+                    TradingViewParser._browser = TradingViewParser._playwright.chromium.launch(**launch_options)
+                    logger.info("Браузер успешно запущен")
                 except Exception as e:
-                    self._result_queue.put((coin_name, {"error": str(e), "coin": coin_name}))
+                    logger.error(f"Ошибка при запуске браузера: {str(e)}")
+                    raise
 
-        except Exception as e:
-            logger.error(f"Ошибка в фоновом процессе: {str(e)}")
-            self._result_queue.put(("ERROR", {"error": str(e)}))
-        finally:
-            self._cleanup()
+    def _create_context(self):
+        """Создает новый контекст браузера"""
+        if TradingViewParser._browser is None:
+            self._init_browser()
 
-    def _parse_coin_internal(self, coin_name):
-        """Внутренний метод для парсинга одной монеты"""
+        self.context = TradingViewParser._browser.new_context(
+            locale="ru-RU",
+            timezone_id="Europe/Moscow",
+            permissions=[],
+            geolocation={"longitude": random.uniform(30, 40), "latitude": random.uniform(50, 60)},
+            color_scheme="light",
+            ignore_https_errors=True,
+            java_script_enabled=True,
+            offline=False,
+            storage_state=None,
+            viewport={"width": 1280, "height": 720}
+        )
+
+        self.context.add_init_script("""
+            delete navigator.__proto__.webdriver;
+            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+            Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+            Object.defineProperty(navigator, 'languages', {get: () => ['ru-RU', 'ru']};
+        """)
+
+    def parse_coin(self, coin_name):
+        """Парсит одну монету"""
         page = None
         try:
-            symbol = f"{coin_name.upper()}USDT"
+            if self.context is None:
+                self._create_context()
+
+            # Определяем символ для поиска - добавляем USDT только если его нет в названии
+            if coin_name.upper().endswith('USDT'):
+                symbol = coin_name.upper()
+                base_name = coin_name.upper()[:-4]  # Убираем USDT для хранения в БД
+            else:
+                symbol = f"{coin_name.upper()}USDT"
+                base_name = coin_name.upper()
+
             logger.info(f"Начало парсинга монеты: {symbol}")
 
             # Создаем новую страницу для каждого запроса
@@ -183,15 +175,15 @@ class TradingViewParser:
             logger.info("Сбор данных из меню")
             spot_exchanges, futures_exchanges = self._parse_markets_menu(page)
 
-            # Дополнительный сбор из таблицы - ВОССТАНАВЛИВАЕМ ИСХОДНУЮ ЛОГИКУ
+            # Дополнительный сбор из таблицы
             logger.info("Дополнительный сбор из основной таблицы")
             main_table_exchanges = self._collect_main_table_exchanges(page)
 
-            # Добавляем пропущенные биржи - ВОССТАНАВЛИВАЕМ ИСХОДНУЮ ЛОГИКУ
+            # Добавляем все биржи из основной таблицы в спотовый список
             for exchange in main_table_exchanges:
-                if exchange and exchange not in spot_exchanges and exchange not in futures_exchanges:
+                if exchange and exchange not in spot_exchanges:
                     spot_exchanges.append(exchange)
-                    logger.info(f"Добавлена пропущенная биржа: {exchange} (основная таблица)")
+                    logger.info(f"Добавлена пропущенная биржа в спот: {exchange} (основная таблица)")
 
             # Удаляем дубликаты
             spot_exchanges = list(set(spot_exchanges))
@@ -204,21 +196,15 @@ class TradingViewParser:
             logger.info(f"Успешно спарсено: {len(spot_exchanges)} спотовых, {len(futures_exchanges)} фьючерсных бирж")
 
             return {
-                'name': coin_name.upper(),
+                'name': base_name,  # Сохраняем базовое название без USDT
                 'spot': spot_exchanges,
                 'futures': futures_exchanges
             }
 
         except Exception as e:
             logger.error(f"Ошибка парсинга {coin_name}: {str(e)}", exc_info=True)
-            try:
-                if page:
-                    page.screenshot(path=f"error_{coin_name}.png")
-                    logger.info(f"Скриншот ошибки сохранен как error_{coin_name}.png")
-            except:
-                pass
             return {
-                'name': coin_name.upper(),
+                'name': base_name if 'base_name' in locals() else coin_name.upper(),
                 'spot': [],
                 'futures': []
             }
@@ -229,53 +215,47 @@ class TradingViewParser:
                 except:
                     pass
 
-    def parse_coin(self, coin_name):
-        """Добавляет запрос в очередь и возвращает результат"""
-        self._request_queue.put(coin_name)
-        return self._result_queue.get()
-
     def parse_coins_batch(self, coin_names):
-        """Парсит несколько монет и возвращает результаты"""
+        """Парсит несколько монет используя один контекст"""
         results = {}
         for coin_name in coin_names:
-            self._request_queue.put(coin_name)
-
-        for _ in range(len(coin_names)):
-            coin_name, result = self._result_queue.get()
-            results[coin_name] = result
-
+            try:
+                result = self.parse_coin(coin_name)
+                results[coin_name] = result
+            except Exception as e:
+                results[coin_name] = {"error": str(e), "coin": coin_name}
         return results
 
     def _open_markets_menu(self, page):
         """Пытается открыть меню Markets различными способами"""
         try:
-            # Способ 1: Клик через JavaScript
-            clicked = page.evaluate('''() => {
-                const btn = document.querySelector("button[data-name='markets']");
-                if (btn && !btn.disabled) {
+            # Сначала ищем кнопку Markets по тексту (русская версия)
+            markets_btn = page.query_selector("button:has-text('Маркеты'), button:has-text('Markets')")
+
+            if markets_btn:
+                # Кликаем через JavaScript
+                page.evaluate('''(btn) => {
                     btn.click();
-                    return true;
-                }
-                return false;
-            }''')
+                }''', markets_btn)
 
-            time.sleep(1)  # Краткая пауза
+                time.sleep(1)
 
-            # Проверяем успешность
-            if page.query_selector("div[data-name='menu-inner']"):
-                return True
+                # Проверяем успешность
+                if page.query_selector("div[data-name='menu-inner']"):
+                    return True
 
-            # Способ 2: Клик через координаты
-            btn = page.query_selector("button[data-name='markets']")
-            if btn:
-                box = btn.bounding_box()
+            # Если не нашли по тексту, ищем по data-name
+            markets_btn = page.query_selector("button[data-name='markets']")
+            if markets_btn:
+                # Кликаем через координаты
+                box = markets_btn.bounding_box()
                 if box:
                     page.mouse.click(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
                     time.sleep(1)
                     if page.query_selector("div[data-name='menu-inner']"):
                         return True
 
-            # Способ 3: Прямой вызов события
+            # Прямой вызов события
             page.evaluate('''() => {
                 const btn = document.querySelector("button[data-name='markets']");
                 if (btn) {
@@ -322,20 +302,29 @@ class TradingViewParser:
                 if exchange_cell:
                     exchange = exchange_cell.inner_text().split('\n')[-1].strip()
 
-                # Определяем тип торговли
                 if not exchange:
                     continue
 
-                if "спот" in row_text or "spot" in row_text:
+                # Определяем тип торговли по тексту строки
+                if "спот" in row_text:
                     spot_exchanges.append(exchange)
-                elif "фьючерс" in row_text or "futures" in row_text or "своп" in row_text or "swap" in row_text:
+                    logger.info(f"Добавлена спотовая биржа: {exchange}")
+                elif "своп" in row_text:
                     futures_exchanges.append(exchange)
-                elif ".p" in row_text or " perpetual" in row_text or "фьючи" in row_text or "fut" in row_text:
-                    futures_exchanges.append(exchange)
-                elif "деривативы" in row_text or "derivatives" in row_text:
-                    futures_exchanges.append(exchange)
+                    logger.info(f"Добавлена фьючерсная биржа: {exchange}")
                 else:
-                    spot_exchanges.append(exchange)
+                    # Если не можем определить по тексту, используем резервную логику
+                    instrument = ""
+                    instrument_cell = row.query_selector("td:nth-child(1)")
+                    if instrument_cell:
+                        instrument = instrument_cell.inner_text().strip().lower()
+
+                    if ".p" in instrument or " perpetual" in instrument:
+                        futures_exchanges.append(exchange)
+                        logger.info(f"Добавлена фьючерсная биржа (по инструменту): {exchange}")
+                    else:
+                        spot_exchanges.append(exchange)
+                        logger.info(f"Добавлена спотовая биржа (по умолчанию): {exchange}")
 
         except PlaywrightTimeoutError:
             logger.warning("Таймаут при парсинге меню Markets")
@@ -365,18 +354,29 @@ class TradingViewParser:
                 exchange_cell = cells[1]
                 exchange = exchange_cell.inner_text().strip()
 
+                # Название инструмента
+                instrument_cell = cells[0]
+                instrument = instrument_cell.inner_text().strip().lower()
+
                 # Тип торговли
                 trade_type_cell = cells[2]
                 trade_type = trade_type_cell.inner_text().lower()
 
-                if "спот" in trade_type or "spot" in trade_type:
+                # Определяем тип торговли по тексту
+                if "спот" in trade_type:
                     spot_exchanges.append(exchange)
-                elif "фьючерс" in trade_type or "futures" in trade_type:
+                    logger.info(f"Добавлена спотовая биржа: {exchange}")
+                elif "своп" in trade_type:
                     futures_exchanges.append(exchange)
-                elif "перпет" in trade_type or "perp" in trade_type:
-                    futures_exchanges.append(exchange)
+                    logger.info(f"Добавлена фьючерсная биржа: {exchange}")
                 else:
-                    spot_exchanges.append(exchange)
+                    # Если не можем определить по тексту, используем резервную логику
+                    if ".p" in instrument or " perpetual" in instrument:
+                        futures_exchanges.append(exchange)
+                        logger.info(f"Добавлена фьючерсная биржа (по инструменту): {exchange}")
+                    else:
+                        spot_exchanges.append(exchange)
+                        logger.info(f"Добавлена спотовая биржа (по умолчанию): {exchange}")
 
         except Exception as e:
             logger.error(f"Ошибка в резервном методе: {str(e)}")
@@ -388,7 +388,7 @@ class TradingViewParser:
         }
 
     def _collect_main_table_exchanges(self, page):
-        """Собирает биржи из основной таблицы на странице - ВОССТАНАВЛИВАЕМ ИСХОДНУЮ ЛОГИКУ"""
+        """Собирает биржи из основной таблицы на странице"""
         exchanges = []
 
         try:
@@ -406,22 +406,23 @@ class TradingViewParser:
                     if logo:
                         exchange_name = logo.inner_text().strip()
 
+                    # Также проверяем ссылки
+                    link = exchange_cell.query_selector("a")
+                    if link and not exchange_name:
+                        exchange_name = link.inner_text().strip()
+
                     if exchange_name:
                         exchanges.append(exchange_name)
-        except:
-            pass
+                        logger.info(f"Добавлена биржа из основной таблицы: {exchange_name}")
+        except Exception as e:
+            logger.error(f"Ошибка при сборе данных из основной таблицы: {str(e)}")
 
         return exchanges
 
-    def _cleanup(self):
-        """Внутренняя очистка ресурсов"""
-        logger.info("Очистка ресурсов парсера")
-
-        try:
-            if self.page:
-                self.page.close()
-        except:
-            pass
+    def close(self):
+        """Закрывает парсер"""
+        if self._closed:
+            return
 
         try:
             if self.context:
@@ -429,59 +430,74 @@ class TradingViewParser:
         except:
             pass
 
-        try:
-            if self.browser:
-                self.browser.close()
-        except:
-            pass
+        with TradingViewParser._browser_lock:
+            TradingViewParser._instance_count -= 1
 
-        try:
-            if self.playwright:
-                self.playwright.stop()
-        except:
-            pass
+            # Закрываем браузер только когда все экземпляры закрыты
+            if TradingViewParser._instance_count <= 0 and TradingViewParser._browser:
+                try:
+                    TradingViewParser._browser.close()
+                    TradingViewParser._browser = None
+                except:
+                    pass
+
+                if TradingViewParser._playwright:
+                    try:
+                        TradingViewParser._playwright.stop()
+                        TradingViewParser._playwright = None
+                    except:
+                        pass
 
         self._closed = True
-
-    def close(self):
-        """Публичное закрытие парсера"""
-        if self._closed:
-            return
-
-        # Отправляем сигнал остановки воркеру
-        self._request_queue.put(None)
-
-        try:
-            if self._worker_thread and self._worker_thread.is_alive():
-                self._worker_thread.join(timeout=5)
-        except:
-            pass
-
-        self._cleanup()
-        logger.info("Ресурсы парсера полностью закрыты")
-
-    def reset(self):
-        """Сброс парсера для повторного использования"""
-        self.close()
-        # Удаляем instance из словаря, чтобы можно было создать новый
-        with self._lock:
-            if self.instance_id in TradingViewParser._instances:
-                del TradingViewParser._instances[self.instance_id]
-        self._initialized = False
 
     def __del__(self):
         if not self._closed:
             self.close()
 
 
-# Функция для запуска в отдельном процессе (сохраняем для обратной совместимости)
+# Функция для запуска в отдельном процессе
 def parse_coin_in_process(coin_name, headless=True):
     try:
-        # Создаем уникальный ID для каждого процесса
-        process_id = f"process_{os.getpid()}_{threading.get_ident()}"
-        parser = TradingViewParser(headless=headless, instance_id=process_id)
+        parser = TradingViewParser(headless=headless)
+        # Определяем base_name аналогично основному методу
+        if coin_name.upper().endswith('USDT'):
+            base_name = coin_name.upper()[:-4]
+        else:
+            base_name = coin_name.upper()
+
         result = parser.parse_coin(coin_name)
+        # Заменяем имя в результате на base_name
+        result['name'] = base_name
         parser.close()
         return result
     except Exception as e:
         return {"error": str(e), "coin": coin_name}
+
+
+# Функция для обработки пакета монет в одном процессе
+def parse_coins_batch_process(coin_names, headless=True):
+    """Парсит пакет монет в одном процессе с одним браузером"""
+    results = {}
+    parser = TradingViewParser(headless=headless)
+
+    try:
+        for coin_name in coin_names:
+            try:
+                # Определяем base_name для корректного сохранения в результатах
+                if coin_name.upper().endswith('USDT'):
+                    base_name = coin_name.upper()[:-4]
+                else:
+                    base_name = coin_name.upper()
+
+                result = parser.parse_coin(coin_name)
+                # Обновляем имя в результате на base_name
+                result['name'] = base_name
+                results[coin_name] = result
+            except Exception as e:
+                # Определяем base_name даже в случае ошибки
+                base_name = coin_name.upper()[:-4] if coin_name.upper().endswith('USDT') else coin_name.upper()
+                results[coin_name] = {"error": str(e), "coin": base_name}
+    finally:
+        parser.close()
+
+    return results

@@ -1,52 +1,47 @@
 [
   {
-    "name": "IXORA",
-    "spot_exchanges": "MEXC, Gate.io, KCEX",
-    "futures_exchanges": ""
-  },
-  {
-    "name": "LINKE",
-    "spot_exchanges": "MEXC",
-    "futures_exchanges": ""
-  },
-  {
-    "name": "METAHERO",
-    "spot_exchanges": "MEXC, Gate.io",
-    "futures_exchanges": ""
-  },
-  {
-    "name": "ARCHA",
-    "spot_exchanges": "",
-    "futures_exchanges": ""
-  },
-  {
-    "name": "ASTRAAI",
-    "spot_exchanges": "MEXC",
-    "futures_exchanges": ""
-  },
-  {
-    "name": "BSX",
-    "spot_exchanges": "MEXC, Gate.io",
-    "futures_exchanges": ""
-  },
-  {
-    "name": "WELF",
-    "spot_exchanges": "MEXC",
-    "futures_exchanges": ""
-  },
-  {
-    "name": "B1OAI",
-    "spot_exchanges": "MEXC",
-    "futures_exchanges": ""
-  },
-  {
-    "name": "GMMT",
-    "spot_exchanges": "MEXC, Gate.io, BitMart, Poloniex",
-    "futures_exchanges": ""
-  },
-  {
     "name": "UNITE",
-    "spot_exchanges": "MEXC, KCEX, Gate.io, Bitget, KuCoin",
-    "futures_exchanges": "MEXC, KCEX, WEEX"
+    "spot_exchanges": "KCEX, MEXC, KuCoin, Gate.io, WEEX, Bitget",
+    "futures_exchanges": "KCEX, WEEX, MEXC"
+  },
+  {
+    "name": "SHIDO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SOL",
+    "spot_exchanges": "Bitrue, Bybit, OKX, BloFin, Delta Exchange, Coinbase, Poloniex, KCEX, Zoomex, LBank, Phemex, WEEX, CoinW, BitMEX, Uniswap v3 (BNB chain), CoinEx, MEXC, KuCoin, BitMart, Bitazza, WOO X, Kraken, Gate.io, HTX, Bitunix, Toobit, Binance, Crypto.com, Bitget, WhiteBIT, BingX, Deepcoin, Binance.US, Bitfinex, PancakeSwap v3 (BNB chain), UpBit, Pionex, Bitso",
+    "futures_exchanges": "Bybit, OKX, BloFin, Delta Exchange, KCEX, Zoomex, LBank, Phemex, WEEX, CoinW, BitMEX, MEXC, BitMart, WOO X, Gate.io, HTX, Bitunix, Toobit, Binance, Bitget, WhiteBIT, BingX, Deepcoin, Bitfinex, Pionex"
+  },
+  {
+    "name": "FDUSD",
+    "spot_exchanges": "Orca (Solana), Binance, Gate.io, PancakeSwap v3 (BNB chain), Bitunix, MEXC, WEEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "XRP",
+    "spot_exchanges": "Bitrue, Bybit, OKX, BloFin, Delta Exchange, Coinbase, Poloniex, KCEX, Zoomex, LBank, Phemex, WEEX, CoinW, BitMEX, Uniswap v3 (BNB chain), CoinEx, MEXC, KuCoin, BitMart, Bitazza, WOO X, Kraken, Gate.io, HTX, Bitunix, Bitstamp, Toobit, Binance, Crypto.com, Bitget, WhiteBIT, BingX, Deepcoin, Binance.US, Bitfinex, PancakeSwap v3 (BNB chain), UpBit, Pionex, Bitso",
+    "futures_exchanges": "Bybit, OKX, BloFin, Delta Exchange, KCEX, Zoomex, LBank, Phemex, WEEX, CoinW, BitMEX, MEXC, BitMart, WOO X, Gate.io, HTX, Bitunix, Toobit, Binance, Bitget, WhiteBIT, BingX, Deepcoin, Bitfinex, Pionex"
+  },
+  {
+    "name": "ETH",
+    "spot_exchanges": "Pionex, Uniswap v3 (BNB chain), Bitget, Gemini, BloFin, LBank, Deribit, Gate.io, Bybit, Delta Exchange, Toobit, MEXC, BingX, Bitrue, CoinW, Bitfinex, BitMart, UpBit, BitMEX, PancakeSwap v3 (BNB chain), Bitunix, Zoomex, Phemex, WOO X, Binance.US, Crypto.com, KuCoin, HTX, Bitso, WhiteBIT, Biswap v2 (BNB chain), Binance, CoinEx, Poloniex, PancakeSwap v2 (BNB chain), Coinbase, WEEX, OKX, Deepcoin, Bitstamp, Bitazza, Kraken, KCEX",
+    "futures_exchanges": "Pionex, Bitget, BloFin, LBank, Gate.io, Bybit, Toobit, Delta Exchange, MEXC, BingX, CoinW, Bitfinex, BitMart, BitMEX, Bitunix, Zoomex, Phemex, WOO X, HTX, WhiteBIT, Binance, WEEX, OKX, Deepcoin, KCEX"
+  },
+  {
+    "name": "BTC",
+    "spot_exchanges": "Pionex, Bitget, Gemini, BloFin, LBank, Deribit, Gate.io, Bybit, Delta Exchange, Toobit, MEXC, BingX, Bitrue, CoinW, Bitfinex, BitMart, UpBit, BitMEX, Bitunix, Zoomex, Phemex, WOO X, Binance.US, Crypto.com, KuCoin, HTX, Bitso, WhiteBIT, Binance, CoinEx, Poloniex, PancakeSwap v2 (BNB chain), Coinbase, WEEX, OKX, Deepcoin, Bitstamp, Bitazza, Kraken, KCEX",
+    "futures_exchanges": "Pionex, Bitget, BloFin, LBank, Gate.io, Bybit, Delta Exchange, Toobit, MEXC, BingX, CoinW, Bitfinex, BitMart, BitMEX, Bitunix, Zoomex, Phemex, WOO X, HTX, WhiteBIT, Binance, WEEX, OKX, Deepcoin, KCEX"
+  },
+  {
+    "name": "USDC",
+    "spot_exchanges": "Pionex, QuickSwap v2 (Polygon), PancakeSwap v3 (Ethereum), Uniswap v3 (BNB chain), Bitget, Gemini, BloFin, VVS Finance (Cronos), Deribit, Gate.io, Uniswap v2 (Ethereum), Bybit, QuickSwap v3 (Polygon), Delta Exchange, MEXC, BaseSwap (Base), Bitrue, CoinW, Bitfinex, BitMart, UpBit, BitMEX, PancakeSwap v3 (BNB chain), Bitunix, Phemex, WOO X, Binance.US, Bitso, KuCoin, HTX, Biswap v2 (BNB chain), WhiteBIT, Curve (Ethereum), MM Finance (Cronos), Binance, CoinEx, Poloniex, PancakeSwap v2 (BNB chain), Coinbase, WEEX, OKX, Uniswap v3 (Base), Bitstamp, Bitazza, Kraken, Orca (Solana), KCEX, Camelot v3 (Arbitrum), Velodrome (Optimism), Camelot v2 (Arbitrum), SushiSwap v2 (Polygon), Uniswap v3 (Avalanche)",
+    "futures_exchanges": "Pionex, MEXC, WOO X, Bitget, Binance, WEEX, BitMart, OKX, Gate.io, Bybit"
+  },
+  {
+    "name": "DOGE",
+    "spot_exchanges": "Bitrue, Bybit, OKX, BloFin, Delta Exchange, Coinbase, Poloniex, KCEX, Zoomex, LBank, Phemex, WEEX, CoinW, BitMEX, Uniswap v3 (BNB chain), CoinEx, MEXC, KuCoin, Uniswap v2 (Ethereum), BitMart, Bitazza, WOO X, Kraken, Gate.io, HTX, Bitunix, Toobit, Binance, Crypto.com, Bitget, WhiteBIT, BingX, Deepcoin, Binance.US, Bitfinex, PancakeSwap v3 (BNB chain), UpBit, Pionex",
+    "futures_exchanges": "Bybit, OKX, BloFin, Delta Exchange, KCEX, Zoomex, LBank, Phemex, WEEX, CoinW, BitMEX, MEXC, BitMart, WOO X, Gate.io, HTX, Bitunix, Toobit, Binance, Bitget, WhiteBIT, BingX, Deepcoin, Bitfinex, Pionex"
   }
 ]

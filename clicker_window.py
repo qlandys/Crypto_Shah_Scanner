@@ -113,6 +113,7 @@ class ClickerWindow(QWidget):
             }
         """)
         self.settings_btn.clicked.connect(self.show_settings)
+        self.settings_btn.setFocusPolicy(Qt.NoFocus)
         header_layout.addWidget(self.settings_btn)
 
         layout.addLayout(header_layout)
@@ -219,6 +220,10 @@ class ClickerWindow(QWidget):
             # Для специальных клавиш
             key_char = str(key).split('.')[-1].lower()
 
+        # Игнорируем пробел (space) чтобы он не открывал настройки
+        if key_char == 'space':
+            return
+
         # Проверяем нажатые клавиши
         left_bind = self.config.get_binding("left_click")
         right_bind = self.config.get_binding("right_click")
@@ -286,6 +291,8 @@ class ClickerWindow(QWidget):
                     time.sleep(0.01)  # Проверяем каждые 10мс
 
                 if not self.left_click_running:
+                    # Если выключили до нажатия пробела, нажимаем его перед выходом
+                    pyautogui.press('space')
                     break
 
                 pyautogui.press('space')
@@ -316,6 +323,8 @@ class ClickerWindow(QWidget):
                     time.sleep(0.01)  # Проверяем каждые 10мс
 
                 if not self.right_click_running:
+                    # Если выключили до нажатия пробела, нажимаем его перед выходом
+                    pyautogui.press('space')
                     break
 
                 pyautogui.press('space')
@@ -357,6 +366,8 @@ class ClickerWindow(QWidget):
 
     def show_settings(self):
         self.settings_window_open = True  # Устанавливаем флаг, что окно настроек открыто
+        # Убираем фокус с кнопки настроек, чтобы пробел не активировал её после закрытия диалога
+        self.settings_btn.clearFocus()
         dialog = SettingsDialog(self.config, self)
         if dialog.exec_():
             self.signals.log_signal.emit("Настройки клавиш обновлены")
@@ -366,6 +377,8 @@ class ClickerWindow(QWidget):
             self.keyboard_listener = keyboard.Listener(on_press=self.on_key_press)
             self.keyboard_listener.start()
         self.settings_window_open = False  # Сбрасываем флаг после закрытия окна
+        # После закрытия диалога возвращаем фокус на основное окно
+        self.setFocus()
 
     def closeEvent(self, event):
         # Останавливаем все процессы при закрытии окна
@@ -425,6 +438,12 @@ class SettingsDialog(QDialog):
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
+
+    def closeEvent(self, event):
+        # При закрытии окна сбрасываем фокус
+        if self.parent():
+            self.parent().setFocus()
+        event.accept()
 
     def apply_theme(self):
         self.setStyleSheet("""

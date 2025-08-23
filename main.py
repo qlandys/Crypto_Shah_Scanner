@@ -9,17 +9,18 @@ import time
 from pathlib import Path
 from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QCompleter, QTabWidget, QInputDialog, QSizePolicy
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QPoint, QPropertyAnimation, QEvent, QSize, QSettings, QEasingCurve
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QPoint, QPropertyAnimation, QEvent, QSize, QSettings, QEasingCurve, QTimer
 from PyQt5.QtGui import (QIcon, QFont, QPalette, QColor, QStandardItemModel,
                          QStandardItem, QKeySequence, QPainter, QPixmap,
                          QLinearGradient, QBrush, QPen)
 from database import Database, Coin
 from parser import TradingViewParser
 import multiprocessing
-from parser import parse_coin_in_process
+from parser import parse_coin_in_process, parse_coins_batch_process
 import io
 from clicker_window import ClickerWindow
 from datetime import datetime, timedelta
+import concurrent.futures
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
@@ -343,70 +344,144 @@ class BatchParseThread(QThread):
     finished = pyqtSignal()
     error = pyqtSignal(str, str)
 
-    def __init__(self, coin_names, db, thread_id):
+    def __init__(self, coin_names, db, thread_id, max_workers=5):
         super().__init__()
         self.coin_names = coin_names
         self.db = db
         self.thread_id = thread_id
         self._is_cancelled = False
         self.start_time = None
-        self.parser = None
+        self.max_workers = max_workers
 
     def cancel(self):
         self._is_cancelled = True
-        if self.parser:
-            self.parser.close()
 
     def run(self):
         total = len(self.coin_names)
         self.start_time = time.time()
 
-        # Создаем парсер с уникальным ID
-        self.parser = TradingViewParser(headless=True, instance_id=self.thread_id)
+        # Разбиваем монеты на батчи для каждого воркера
+        chunk_size = max(1, len(self.coin_names) // self.max_workers)
+        chunks = [self.coin_names[i:i + chunk_size] for i in range(0, len(self.coin_names), chunk_size)]
 
-        # Парсим все монеты пачками
-        batch_size = 10
-        processed = 0
+        with concurrent.futures.ProcessPoolExecutor(max_workers=self.max_workers) as executor:
+            # Запускаем процессы для обработки каждого батча
+            future_to_chunk = {
+                executor.submit(parse_coins_batch_process, chunk, True): chunk
+                for chunk in chunks
+            }
 
-        for i in range(0, total, batch_size):
-            if self._is_cancelled:
-                break
-
-            batch = self.coin_names[i:i + batch_size]
-            results = self.parser.parse_coins_batch(batch)
-
-            for j, coin_name in enumerate(batch):
+            processed = 0
+            for future in concurrent.futures.as_completed(future_to_chunk):
                 if self._is_cancelled:
                     break
 
-                result = results[coin_name]
-                current_index = i + j + 1
+                chunk = future_to_chunk[future]
+                try:
+                    chunk_results = future.result()
 
-                # Расчет оставшегося времени
-                elapsed = time.time() - self.start_time
-                time_per_coin = elapsed / current_index
-                remaining_seconds = time_per_coin * (total - current_index)
+                    for coin_name, result in chunk_results.items():
+                        processed += 1
 
-                # Форматирование времени в ЧЧ:ММ:СС
-                hours = int(remaining_seconds // 3600)
-                minutes = int((remaining_seconds % 3600) // 60)
-                seconds = int(remaining_seconds % 60)
-                remaining_time = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+                        # Расчет оставшегося времени
+                        elapsed = time.time() - self.start_time
+                        time_per_coin = elapsed / processed
+                        remaining_seconds = time_per_coin * (total - processed)
 
-                if "error" in result:
-                    self.error.emit(result["error"], coin_name)
-                else:
-                    spot_str = ", ".join(result['spot']) if result['spot'] else ""
-                    futures_str = ", ".join(result['futures']) if result['futures'] else ""
-                    self.db.save_coin(result['name'], spot_str, futures_str)
+                        # Форматирование времени в ЧЧ:ММ:СС
+                        hours = int(remaining_seconds // 3600)
+                        minutes = int((remaining_seconds % 3600) // 60)
+                        seconds = int(remaining_seconds % 60)
+                        remaining_time = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
-                self.progress.emit(current_index, total, coin_name, remaining_time)
+                        if "error" in result:
+                            self.error.emit(result["error"], coin_name)
+                        else:
+                            spot_str = ", ".join(result['spot']) if result['spot'] else ""
+                            futures_str = ", ".join(result['futures']) if result['futures'] else ""
+                            self.db.save_coin(result['name'], spot_str, futures_str)
 
-                # Небольшая пауза между запросами
-                time.sleep(0.5)
+                        self.progress.emit(processed, total, coin_name, remaining_time)
 
-        self.parser.close()
+                except Exception as e:
+                    # Если весь батч упал с ошибкой
+                    for coin_name in chunk:
+                        processed += 1
+                        self.error.emit(str(e), coin_name)
+                        self.progress.emit(processed, total, coin_name, "Ошибка батча")
+
         self.finished.emit()
+
+
+# Добавьте методы для очистки памяти в класс ProfileTab
+def start_memory_cleanup(self):
+    """Запускает периодическую очистку памяти"""
+    self.cleanup_timer = QTimer(self)
+    self.cleanup_timer.timeout.connect(self.memory_cleanup)
+    self.cleanup_timer.start(30000)  # Каждые 30 секунд
+
+
+def stop_memory_cleanup(self):
+    """Останавливает очистку памяти"""
+    if hasattr(self, 'cleanup_timer'):
+        self.cleanup_timer.stop()
+        self.cleanup_timer.deleteLater()
+
+
+def memory_cleanup(self):
+    """Очистка памяти во время пакетной обработки"""
+    if hasattr(self, 'batch_thread') and self.batch_thread.isRunning():
+        # Принудительный сбор мусора
+        import gc
+        gc.collect()
+
+
+# Обновите метод load_file в классе ProfileTab
+def load_file(self):
+    file_path, _ = QFileDialog.getOpenFileName(
+        self, "Выберите файл с монетами", "", "Text Files (*.txt);;All Files (*)"
+    )
+    if not file_path:
+        return
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            coin_names = f.readlines()
+        coin_names = [name.strip().upper() for name in coin_names if name.strip()]
+        if not coin_names:
+            QMessageBox.warning(self, "Ошибка", "Файл пуст")
+            return
+
+        self.scan_btn.setEnabled(False)
+        self.load_file_btn.setEnabled(False)
+        self.progress_bar.setVisible(False)
+        self.batch_progress_bar.setVisible(True)
+        self.batch_progress_bar.setRange(0, len(coin_names))
+        self.batch_progress_bar.setValue(0)
+        self.batch_progress_bar.setFormat("Подготовка к сканированию...")
+        self.cancel_btn.setVisible(True)
+
+        # Определяем оптимальное количество процессов
+        coin_count = len(coin_names)
+        max_workers = min(8, max(2, coin_count // 10))  # 1 воркер на каждые 10 монет, но не более 8
+
+        # Создаем уникальный ID для этого потока пакетного сканирования
+        thread_id = f"batch_{int(time.time())}_{id(self)}"
+        self.batch_thread = BatchParseThread(coin_names, self.db, thread_id, max_workers)
+        self.batch_thread.progress.connect(self.on_batch_progress)
+        self.batch_thread.finished.connect(self.on_batch_finished)
+        self.batch_thread.error.connect(self.on_batch_error)
+        self.batch_thread.start()
+
+        # Запускаем очистку памяти во время пакетной обработки
+        self.start_memory_cleanup()
+
+    except Exception as e:
+        QMessageBox.critical(self, "Ошибка", f"Не удалось загрузить файл: {str(e)}")
+        self.scan_btn.setEnabled(True)
+        self.load_file_btn.setEnabled(True)
+        self.stop_memory_cleanup()
+
 
 class ProfileTab(QWidget):
     def __init__(self, profile_name, parent=None):
@@ -447,6 +522,32 @@ class ProfileTab(QWidget):
 
         cleanup_threads.cleanup_threads()
         event.accept()
+
+    def start_memory_cleanup(self):
+        """Запускает периодическую очистку памяти"""
+        self.cleanup_timer = QTimer()
+        self.cleanup_timer.timeout.connect(self.memory_cleanup)
+        self.cleanup_timer.start(30000)  # Каждые 30 секунд
+
+    def stop_memory_cleanup(self):
+        """Останавливает очистку памяти"""
+        if hasattr(self, 'cleanup_timer'):
+            self.cleanup_timer.stop()
+            self.cleanup_timer.deleteLater()
+
+    def memory_cleanup(self):
+        """Очистка памяти во время пакетной обработки"""
+        if hasattr(self, 'batch_thread') and self.batch_thread.isRunning():
+            # Принудительный сбор мусора
+            import gc
+            gc.collect()
+
+            # Также пытаемся освободить неиспользуемую память
+            try:
+                import ctypes
+                ctypes.CDLL('libc.so.6').malloc_trim(0)
+            except:
+                pass  # Не критично, если не сработает
 
     def apply_theme(self):
         self.setStyleSheet("""
@@ -810,7 +911,7 @@ class ProfileTab(QWidget):
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 coin_names = f.readlines()
-            coin_names = [name.strip() for name in coin_names if name.strip()]
+            coin_names = [name.strip().upper() for name in coin_names if name.strip()]
             if not coin_names:
                 QMessageBox.warning(self, "Ошибка", "Файл пуст")
                 return
@@ -826,13 +927,20 @@ class ProfileTab(QWidget):
             self.batch_progress_bar.setFormat("Подготовка к сканированию...")
             self.cancel_btn.setVisible(True)
 
+            # Определяем оптимальное количество процессов
+            coin_count = len(coin_names)
+            max_workers = min(5, max(2, coin_count // 20))  # 1 воркер на каждые 20 монет, но не более 5
+
             # Создаем уникальный ID для этого потока пакетного сканирования
             thread_id = f"batch_{int(time.time())}_{id(self)}"
-            self.batch_thread = BatchParseThread(coin_names, self.db, thread_id)
+            self.batch_thread = BatchParseThread(coin_names, self.db, thread_id, max_workers)
             self.batch_thread.progress.connect(self.on_batch_progress)
             self.batch_thread.finished.connect(self.on_batch_finished)
             self.batch_thread.error.connect(self.on_batch_error)
             self.batch_thread.start()
+
+            # Запускаем очистку памяти во время пакетной обработки
+            self.start_memory_cleanup()
 
             self.coin_input.setText(original_text)
 
@@ -840,6 +948,7 @@ class ProfileTab(QWidget):
             QMessageBox.critical(self, "Ошибка", f"Не удалось загрузить файл: {str(e)}")
             self.scan_btn.setEnabled(True)
             self.load_file_btn.setEnabled(True)
+            self.stop_memory_cleanup()
 
     def on_scan_finished(self, data):
         try:
@@ -900,6 +1009,9 @@ class ProfileTab(QWidget):
         self.batch_progress_bar.setFormat("")
         self.cancel_btn.setVisible(False)
 
+        # Останавливаем очистку памяти
+        self.stop_memory_cleanup()
+
         self.db.reload_from_file()
         self.update_exchange_list()
         self.reset_filters()
@@ -916,6 +1028,8 @@ class ProfileTab(QWidget):
             self.batch_thread.wait(1000)
             self.on_batch_finished()
             self.batch_progress_bar.setFormat("")
+            # Останавливаем очистку памяти при отмене
+            self.stop_memory_cleanup()
 
     def apply_filter(self):
         coin_name = self.coin_search_input.text().strip().upper()
@@ -1199,6 +1313,32 @@ class CryptoApp(QMainWindow):
         btn_layout.addWidget(self.delete_profile_btn)
         header_layout.addLayout(btn_layout)
 
+        self.freak_parser_btn = QPushButton()
+        self.freak_parser_btn.setFixedSize(36, 36)
+        self.freak_parser_btn.setToolTip("Открыть Freak Parser")
+        if os.path.exists("icons/icon_freak_parser.png"):
+            self.freak_parser_btn.setIcon(QIcon("icons/icon_freak_parser.png"))
+            self.freak_parser_btn.setIconSize(QSize(24, 24))
+        else:
+            self.freak_parser_btn.setText("FP")
+        self.freak_parser_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #444444;
+                border: none;
+                border-radius: 18px;
+            }
+            QPushButton:hover {
+                background-color: #555555;
+            }
+        """)
+
+        self.freak_parser_btn.clicked.connect(self.open_freak_parser)
+        btn_layout.addWidget(self.freak_parser_btn)
+
+        btn_layout.addWidget(self.copy_profile_btn)
+        btn_layout.addWidget(self.delete_profile_btn)
+        header_layout.addLayout(btn_layout)
+
         # Кнопка закрепления с иконкой
         self.pin_button = QPushButton()
         self.pin_button.setCheckable(True)
@@ -1303,6 +1443,33 @@ class CryptoApp(QMainWindow):
         QApplication.instance().installEventFilter(self)
 
         main_layout.addWidget(self.tab_widget, 1)
+
+    def open_freak_parser(self):
+        # Проверяем, не открыт ли уже парсер и существует ли окно
+        if hasattr(self, 'freak_parser_window') and self.freak_parser_window is not None:
+            try:
+                if self.freak_parser_window.isVisible():
+                    self.freak_parser_window.raise_()
+                    self.freak_parser_window.activateWindow()
+                    return
+                else:
+                    # Окно существует, но не видимо (возможно, закрыто) - удаляем ссылку
+                    self.freak_parser_window = None
+            except:
+                # Если произошла ошибка при проверке окна (например, оно было закрыто)
+                self.freak_parser_window = None
+
+        # Если окно не открыто, создаем новое
+        if not hasattr(self, 'freak_parser_window') or self.freak_parser_window is None:
+            try:
+                from freak_parser import TradingViewParserGUI
+                self.freak_parser_window = TradingViewParserGUI()
+                # Подключаем сигнал на закрытие окна, чтобы обнулить ссылку
+                self.freak_parser_window.finished.connect(lambda: setattr(self, 'freak_parser_window', None))
+                self.freak_parser_window.show()
+            except Exception as e:
+                print(f"Ошибка при открытии Freak Parser: {e}")
+                self.freak_parser_window = None
 
     def open_clicker(self):
         global CLICKER_OPENED

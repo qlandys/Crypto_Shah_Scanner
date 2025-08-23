@@ -1,0 +1,2352 @@
+[
+  {
+    "name": "BSX",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "WELF",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "B1OAI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "GMMT",
+    "spot_exchanges": "MEXC, Poloniex, BitMart, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "UNITE",
+    "spot_exchanges": "Gate.io, MEXC, WEEX, Bitget, KCEX, KuCoin",
+    "futures_exchanges": "MEXC, KCEX, WEEX"
+  },
+  {
+    "name": "IXORA",
+    "spot_exchanges": "KCEX, Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LINKE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "METAHERO",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ARCHA",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ASTRAAI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NCN",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ATT",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NIZA",
+    "spot_exchanges": "WEEX, Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MARS4",
+    "spot_exchanges": "MEXC, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BROAK",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "POLIS",
+    "spot_exchanges": "CoinEx, Gate.io, MEXC, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "WINR",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MMUI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SBX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LAIR",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CHPD",
+    "spot_exchanges": "WEEX, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BITBOARD",
+    "spot_exchanges": "Gate.io, MEXC, KCEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "RMV",
+    "spot_exchanges": "MEXC, KuCoin, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MGT",
+    "spot_exchanges": "BitMart, Gate.io, MEXC, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ASIS",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MIDLE",
+    "spot_exchanges": "Gate.io, MEXC, KCEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MOOLAH",
+    "spot_exchanges": "WEEX, MEXC, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "EXVG",
+    "spot_exchanges": "Bybit, MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PADD",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "GOHOME",
+    "spot_exchanges": "BloFin, Gate.io, MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "XU308",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DINGO",
+    "spot_exchanges": "MEXC, BitMart, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BNRY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SILO",
+    "spot_exchanges": "MEXC, BitMart, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MTS",
+    "spot_exchanges": "Gate.io, MEXC, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BATTERY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LBM",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NFE",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MIND",
+    "spot_exchanges": "MEXC, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TRUU",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FACTR",
+    "spot_exchanges": "CoinEx, MEXC, Gate.io, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LNDX",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "JLP",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FNTIO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "JAM",
+    "spot_exchanges": "KuCoin, KCEX, Gate.io, MEXC, Binance.US",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MUTH",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FEG",
+    "spot_exchanges": "WEEX, Gate.io, MEXC, BitMart",
+    "futures_exchanges": "WEEX"
+  },
+  {
+    "name": "WX",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ZAI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "HIPPO",
+    "spot_exchanges": "WEEX, Toobit, Gate.io, MEXC, BitMart, LBank, Bybit, Bitget, KuCoin, Poloniex, Pionex, WOO X, BloFin, Binance, Zoomex, CoinEx, KCEX, BingX, Phemex, HTX",
+    "futures_exchanges": "Bybit, BloFin, Bitget, Binance, Zoomex, KCEX, WEEX, Phemex, Toobit, Gate.io, Pionex, WOO X, BingX, MEXC, BitMart, LBank"
+  },
+  {
+    "name": "GEAR",
+    "spot_exchanges": "Bitget, CoinEx, Phemex, Gate.io, HTX, MEXC, OKX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PMG",
+    "spot_exchanges": "Gate.io, MEXC, KuCoin, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BACHI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FLOCK",
+    "spot_exchanges": "Bybit, BloFin, Bitget, KuCoin, Zoomex, KCEX, CoinEx, WEEX, UpBit, Phemex, Gate.io, BingX, MEXC, BitMart",
+    "futures_exchanges": "Bybit, BloFin, Zoomex, KCEX, WEEX, Phemex, Gate.io, BingX, MEXC"
+  },
+  {
+    "name": "IAI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SVM",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PBX",
+    "spot_exchanges": "Gate.io, MEXC, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MA",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SECU",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "RBC",
+    "spot_exchanges": "Gate.io, MEXC, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NEI",
+    "spot_exchanges": "MEXC, KCEX, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ZLW",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PEAR",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BOBO",
+    "spot_exchanges": "CoinEx, KCEX, Poloniex, Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DHN",
+    "spot_exchanges": "MEXC, BitMart, KCEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LRT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NERO",
+    "spot_exchanges": "Bitget, Gate.io, MEXC",
+    "futures_exchanges": "Gate.io"
+  },
+  {
+    "name": "WSI",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ARG",
+    "spot_exchanges": "Bitget, Poloniex, CoinEx, Gate.io, OKX, MEXC, HTX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SOULS",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NAVI",
+    "spot_exchanges": "MEXC, Gate.io, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LAI",
+    "spot_exchanges": "KCEX, CoinEx, Gate.io, MEXC, HTX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TRCL",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FRT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "QLINDO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CATE",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FIT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "RIZE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LEO",
+    "spot_exchanges": "Bitfinex, Gate.io, MEXC, BitMart, OKX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CDT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "APFC",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "WEMIX",
+    "spot_exchanges": "Bybit, Bitget, KuCoin, CoinEx, WEEX, Gate.io, MEXC, BitMart",
+    "futures_exchanges": "Gate.io"
+  },
+  {
+    "name": "NPCS",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "GSWIFT",
+    "spot_exchanges": "Bybit, Bitget, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "XION",
+    "spot_exchanges": "Bybit, Bitget, KuCoin, Zoomex, CoinEx, WEEX, LBank, Phemex, Gate.io, MEXC, BitMart, HTX",
+    "futures_exchanges": "Bybit, Bitget, Zoomex, WEEX, Gate.io, MEXC, LBank"
+  },
+  {
+    "name": "RET",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TIX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MSN",
+    "spot_exchanges": "Gate.io, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CCDOG",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CBL",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "VEX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AUR",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "XOXNO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LOE",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NPC",
+    "spot_exchanges": "Bitget, KuCoin, CoinEx, Poloniex, KCEX, Phemex, Gate.io, WOO X, MEXC, BitMart, HTX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ZBU",
+    "spot_exchanges": "Gate.io, MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PLANET",
+    "spot_exchanges": "MEXC, Gate.io, BitMart, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AREA",
+    "spot_exchanges": "MEXC, Poloniex, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "IZZY",
+    "spot_exchanges": "MEXC, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SOLAMA",
+    "spot_exchanges": "MEXC, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BDC",
+    "spot_exchanges": "CoinEx, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MARS",
+    "spot_exchanges": "CoinEx, MEXC, KCEX, Poloniex, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "OOE",
+    "spot_exchanges": "MEXC, CoinEx, KuCoin, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KENDU",
+    "spot_exchanges": "MEXC, Poloniex, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ISK",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NDC",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NOC",
+    "spot_exchanges": "MEXC, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "OTK",
+    "spot_exchanges": "MEXC, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "COT",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "UBX",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LANDSHARE",
+    "spot_exchanges": "MEXC, Gate.io, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AIH",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FTON",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AIVA",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "USDR",
+    "spot_exchanges": "WhiteBIT, CoinEx, BloFin, MEXC, Kraken, HTX, Phemex, Bitfinex, Bybit, Poloniex, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SUIP",
+    "spot_exchanges": "MEXC, KuCoin, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KHAI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "XLS",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "WUF",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SARM",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "VMINT",
+    "spot_exchanges": "MEXC, Uniswap v2 (Ethereum)",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "UBSN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BABYBONK",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MLT",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LKY",
+    "spot_exchanges": "MEXC, CoinEx, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "WACME",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SCOTTY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "STARL",
+    "spot_exchanges": "MEXC, CoinEx, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CRU",
+    "spot_exchanges": "HTX, MEXC, CoinEx, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DEEPSEEK",
+    "spot_exchanges": "MEXC, KCEX, WEEX, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ROOT",
+    "spot_exchanges": "CoinEx, MEXC, HTX, BitMart, Bybit, KuCoin, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "COMAI",
+    "spot_exchanges": "MEXC, CoinEx, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ELU",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CSWAP",
+    "spot_exchanges": "MEXC, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "EON",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SEILOR",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "EURR",
+    "spot_exchanges": "WhiteBIT, CoinEx, MEXC, Kraken, HTX, Phemex, Bitfinex, Poloniex, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DOLAN",
+    "spot_exchanges": "MEXC, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SAC",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NET",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "UNIT0",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "HYPERSKIDS",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MOCHI",
+    "spot_exchanges": "MEXC, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CHIRP",
+    "spot_exchanges": "MEXC, KuCoin, Gate.io, WEEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "REDBIRD",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KOKO",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KDX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ABEY",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SCA",
+    "spot_exchanges": "CoinEx, MEXC, LBank, WEEX, HTX, Bitget, Phemex, BitMart, Bybit, Poloniex, KuCoin, Gate.io",
+    "futures_exchanges": "MEXC, WEEX, Bybit, LBank, Gate.io"
+  },
+  {
+    "name": "LIORA",
+    "spot_exchanges": "MEXC, KCEX, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PNDR",
+    "spot_exchanges": "MEXC, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NEONX",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BLOCKASSETS",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "GURU",
+    "spot_exchanges": "MEXC, CoinEx, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ANT",
+    "spot_exchanges": "MEXC, KuCoin, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "RAN",
+    "spot_exchanges": "MEXC, PancakeSwap v3 (BNB chain)",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AXOL",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "XRPAYNET",
+    "spot_exchanges": "MEXC, Bitrue",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LYNX",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KOIN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MEX",
+    "spot_exchanges": "MEXC, Poloniex, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "RETARDIO",
+    "spot_exchanges": "MEXC, Poloniex, WEEX, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ENF",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TRISIG",
+    "spot_exchanges": "MEXC, Poloniex, KuCoin, WEEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "JUNE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CWA",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SOSO",
+    "spot_exchanges": "CoinEx, MEXC, WEEX, Phemex, BitMart, Bybit, Zoomex, Gate.io",
+    "futures_exchanges": "Bybit, Zoomex"
+  },
+  {
+    "name": "AGC",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TOWER",
+    "spot_exchanges": "MEXC, KuCoin, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MSM",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "HNS",
+    "spot_exchanges": "MEXC, CoinEx, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AAST",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CATCOIN",
+    "spot_exchanges": "MEXC, CoinEx, KCEX, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CGPU",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AITPROTOCOL",
+    "spot_exchanges": "Gate.io, MEXC, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ASSETMINT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KASPY",
+    "spot_exchanges": "MEXC, CoinEx, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NOTAI",
+    "spot_exchanges": "MEXC, CoinEx, KuCoin, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "GRAM",
+    "spot_exchanges": "MEXC, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ARC",
+    "spot_exchanges": "CoinEx, Binance, BloFin, MEXC, LBank, OKX, WEEX, Zoomex, HTX, Bitget, Phemex, BingX, KCEX, Deepcoin, Bybit, Poloniex, KuCoin, Gate.io",
+    "futures_exchanges": "Binance, BloFin, MEXC, LBank, WEEX, Zoomex, HTX, Bitget, BingX, KCEX, Phemex, Deepcoin, Bybit, OKX, Gate.io"
+  },
+  {
+    "name": "IZI",
+    "spot_exchanges": "CoinEx, MEXC, Bybit, KuCoin, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DICE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "THN",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "EFFECT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SHRUB",
+    "spot_exchanges": "CoinEx, MEXC, KCEX, Poloniex, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TBA",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "OFN",
+    "spot_exchanges": "MEXC, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "C4E",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MVL",
+    "spot_exchanges": "MEXC, WEEX, HTX, Bybit, Poloniex, Zoomex, Gate.io",
+    "futures_exchanges": "Bybit, MEXC, Zoomex, WEEX"
+  },
+  {
+    "name": "MAD",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TPRO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TRAVA",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SUIDEPIN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NTX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MLX",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SATX",
+    "spot_exchanges": "WEEX, Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NEXM",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BICITY",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KZEN",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "YACHT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SPCFIN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SIDUS",
+    "spot_exchanges": "CoinEx, Bybit, Gate.io, KuCoin, MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ARMY",
+    "spot_exchanges": "CoinEx, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LCAT",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "USDD",
+    "spot_exchanges": "Bybit, WEEX, Gate.io, CoinW, BitMart, KuCoin, MEXC, Poloniex, HTX, STON.fi v2 (TON)",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AUKI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "VENOM",
+    "spot_exchanges": "Bybit, CoinEx, Gate.io, KuCoin, MEXC, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KPC",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "VSG",
+    "spot_exchanges": "BitMart, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MDAO",
+    "spot_exchanges": "Bybit, Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TANPIN",
+    "spot_exchanges": "BitMart, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BURGER",
+    "spot_exchanges": "KCEX, MEXC, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FISHW",
+    "spot_exchanges": "WEEX, Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FUEL",
+    "spot_exchanges": "Bybit, CoinEx, WEEX, Gate.io, LBank, Phemex, Bitget, KuCoin, Zoomex, MEXC, BitMart, BingX",
+    "futures_exchanges": "Bybit, Gate.io, LBank, Phemex, Bitget, Zoomex, BingX"
+  },
+  {
+    "name": "REM",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KMD",
+    "spot_exchanges": "CoinEx, PancakeSwap v2 (BNB chain), KuCoin, MEXC, HTX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PGPT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AUTOS",
+    "spot_exchanges": "KuCoin, WEEX, Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ICT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SCPT",
+    "spot_exchanges": "KuCoin, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FMC",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "WQUIL",
+    "spot_exchanges": "CoinEx, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "HEU",
+    "spot_exchanges": "CoinEx, Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AGRS",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "G8D",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BCAT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "YTC",
+    "spot_exchanges": "BitMart, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ATLAS",
+    "spot_exchanges": "CoinEx, Gate.io, CoinW, MEXC, Poloniex, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TKT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DOLZ",
+    "spot_exchanges": "QuickSwap v3 (Polygon), MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ZENQ",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "XEL",
+    "spot_exchanges": "CoinEx, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ACQ",
+    "spot_exchanges": "KuCoin, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "VULPERFI",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ARTFI",
+    "spot_exchanges": "KuCoin, Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AVT",
+    "spot_exchanges": "BitMart, Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MOONED",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MICHI",
+    "spot_exchanges": "CoinEx, KCEX, Gate.io, LBank, CoinW, KuCoin, MEXC, Poloniex, HTX, BitMart",
+    "futures_exchanges": "LBank"
+  },
+  {
+    "name": "PEPECAT",
+    "spot_exchanges": "WEEX, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TAVA",
+    "spot_exchanges": "HTX, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KOII",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BXX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PDA",
+    "spot_exchanges": "HTX, CoinEx, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CTBRO",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NAIT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "QBX",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "YAPYO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CHK",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "HOLDSTATION",
+    "spot_exchanges": "CoinEx, WEEX, Gate.io, Bitget, KuCoin, MEXC",
+    "futures_exchanges": "WEEX"
+  },
+  {
+    "name": "ORNJ",
+    "spot_exchanges": "BitMart, Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TMAI",
+    "spot_exchanges": "BitMart, Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "GLUTE",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "YOURAI",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ZON",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LADYS",
+    "spot_exchanges": "Bybit, CoinEx, KCEX, Gate.io, LBank, CoinW, Crypto.com, KuCoin, MEXC, Poloniex, HTX, BitMart",
+    "futures_exchanges": "LBank"
+  },
+  {
+    "name": "SFIN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DEP",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BDIC",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CHANGE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "COA",
+    "spot_exchanges": "Bybit, KCEX, WEEX, BloFin, Bitget, MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BELLS",
+    "spot_exchanges": "CoinEx, Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MORRA",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "GET",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ASTROS",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PORTUMA",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TATSU",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PHT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BLS",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TOM",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ACP",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MAIV",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KANGO",
+    "spot_exchanges": "CoinEx, BitMart, MEXC, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NTV",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "RDEX",
+    "spot_exchanges": "MEXC, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TOG",
+    "spot_exchanges": "KuCoin, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "WAGMI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ABEL",
+    "spot_exchanges": "BitMart, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AZUR",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "VEMP",
+    "spot_exchanges": "KuCoin, Gate.io, MEXC, Bitrue",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ELIX",
+    "spot_exchanges": "Bybit, Gate.io, MEXC, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SUT",
+    "spot_exchanges": "Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "RUNI",
+    "spot_exchanges": "BitMart, Gate.io, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "RC",
+    "spot_exchanges": "BitMart, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NIM",
+    "spot_exchanges": "CoinEx, Gate.io, PancakeSwap v2 (BNB chain), KuCoin, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "WSM",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "GAG",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MNTX",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KIBSHI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PACK",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ORD",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KOMA",
+    "spot_exchanges": "KCEX, BingX, WEEX, Bitget, Phemex, Toobit, BitMart, Gate.io, BloFin, MEXC, Poloniex, LBank, CoinEx, Binance, KuCoin",
+    "futures_exchanges": "KCEX, BingX, WEEX, Bitget, Toobit, Gate.io, BloFin, MEXC, Binance, LBank"
+  },
+  {
+    "name": "STUFF",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "EARTHMETA",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BASEDPEPE",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "REACT",
+    "spot_exchanges": "Gate.io, MEXC, Uniswap v2 (Ethereum), CoinEx, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SERV",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "COLLE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "RIZO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "1ROR",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BNY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "WNT",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AMPED",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "STETH",
+    "spot_exchanges": "HTX, Bitget, OKX, Gate.io, MEXC, Bybit",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "L1",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TORSY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TFI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SQGROW",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "WQT",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SNAKES",
+    "spot_exchanges": "MEXC, HTX, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "XIN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KILT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NMKR",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SAL",
+    "spot_exchanges": "MEXC, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MASA",
+    "spot_exchanges": "WEEX, HTX, Zoomex, Bitget, Phemex, BitMart, Gate.io, BloFin, MEXC, Bybit, CoinEx, KuCoin",
+    "futures_exchanges": "WEEX, Zoomex, Gate.io, BloFin, MEXC, Bybit"
+  },
+  {
+    "name": "DON",
+    "spot_exchanges": "MEXC, BitMart, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "GENE",
+    "spot_exchanges": "MEXC, Bybit",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "EPIKO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KDG",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LDY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "XGROK",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FNCY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BOSON",
+    "spot_exchanges": "HTX, Gate.io, MEXC, Binance.US, CoinEx, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BOB",
+    "spot_exchanges": "KCEX, BitMart, MEXC, Poloniex, CoinW, CoinEx, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BSCS",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "WAFFLES",
+    "spot_exchanges": "WEEX, MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "RVF",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "UPO",
+    "spot_exchanges": "MEXC, BitMart, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "IXT",
+    "spot_exchanges": "MEXC, CoinEx, QuickSwap v2 (Polygon)",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NWS",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TRX",
+    "spot_exchanges": "Bitazza, Zoomex, Toobit, Bybit, Deepcoin, BitMart, OKX, Gate.io, Poloniex, Bitrue, LBank, UpBit, Pionex, Phemex, CoinEx, Binance, WEEX, Bitget, Delta Exchange, Bitfinex, MEXC, WhiteBIT, PancakeSwap v2 (BNB chain), KCEX, BingX, Uniswap v3 (BNB chain), HTX, WOO X, BloFin, CoinW, BitMEX, KuCoin",
+    "futures_exchanges": "Zoomex, Toobit, Deepcoin, BitMart, OKX, Gate.io, LBank, Pionex, Phemex, Binance, WEEX, Bitget, Delta Exchange, Bitfinex, MEXC, BitMEX, WhiteBIT, KCEX, BingX, HTX, WOO X, BloFin, CoinW, Bybit"
+  },
+  {
+    "name": "JINXDOG",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DUCK",
+    "spot_exchanges": "WEEX, KCEX, Zoomex, Bitget, Phemex, Toobit, Deepcoin, BitMart, Gate.io, OKX, MEXC, BloFin, LBank, Bybit, CoinEx, KuCoin",
+    "futures_exchanges": "WEEX, Zoomex, Bitget, Toobit, Deepcoin, OKX, Gate.io, MEXC, Bybit, Phemex, LBank"
+  },
+  {
+    "name": "OSAK",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "INDY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SAFFRONI",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MEY",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BLOCK",
+    "spot_exchanges": "KCEX, KuCoin, Gate.io, MEXC, LBank",
+    "futures_exchanges": "KCEX, MEXC, LBank"
+  },
+  {
+    "name": "PLENA",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NGC",
+    "spot_exchanges": "MEXC, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ZFU",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "QTLX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "GPTPUS",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "XNA",
+    "spot_exchanges": "MEXC, CoinEx, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ICP",
+    "spot_exchanges": "Zoomex, Toobit, BitMart, OKX, Gate.io, Poloniex, Bitrue, LBank, Pionex, Phemex, CoinEx, Binance, WEEX, Bitget, Bitfinex, MEXC, Crypto.com, WhiteBIT, KCEX, BingX, HTX, WOO X, BloFin, CoinW, Bybit, Binance.US, Coinbase, KuCoin",
+    "futures_exchanges": "Zoomex, Toobit, BitMart, OKX, Gate.io, LBank, Pionex, Phemex, Binance, WEEX, Bitget, Bitfinex, MEXC, WhiteBIT, KCEX, BingX, HTX, WOO X, BloFin, CoinW, Bybit"
+  },
+  {
+    "name": "STRAWBERRYAI",
+    "spot_exchanges": "MEXC, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SKX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NAI",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DREYAI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LIXX",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FACT",
+    "spot_exchanges": "MEXC, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SAUCE",
+    "spot_exchanges": "MEXC, CoinEx, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ROG",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TRN",
+    "spot_exchanges": "MEXC, Poloniex, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "W3GG",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TUXC",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "REX",
+    "spot_exchanges": "WEEX, KCEX, BingX, Zoomex, CoinEx, Bitget, Gate.io, MEXC, Poloniex, Bybit, Phemex, LBank",
+    "futures_exchanges": "WEEX, BingX, Zoomex, Gate.io, MEXC, Bybit, Phemex, LBank"
+  },
+  {
+    "name": "OGPU",
+    "spot_exchanges": "KCEX, MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CATCH",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MUNITY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PX",
+    "spot_exchanges": "MEXC, DeDust.io (TON)",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NEXA",
+    "spot_exchanges": "Bitget, BitMart, MEXC, CoinEx, PancakeSwap v2 (BNB chain)",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BASEDAI",
+    "spot_exchanges": "MEXC, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "XCAD",
+    "spot_exchanges": "Gate.io, MEXC, Poloniex, Bybit, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CARR",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SHARKCAT",
+    "spot_exchanges": "MEXC, Poloniex, KCEX, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PZP",
+    "spot_exchanges": "MEXC, KuCoin, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SMAT",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PALM",
+    "spot_exchanges": "MEXC, BitMart, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SER",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "F3",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SECOND",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MLC",
+    "spot_exchanges": "WEEX, MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DEDA",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "EAI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ARENA",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "UQC",
+    "spot_exchanges": "MEXC, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DUKO",
+    "spot_exchanges": "MEXC, CoinEx, Gate.io, BitMart, KCEX, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ZYGO",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SOLX",
+    "spot_exchanges": "MEXC, KCEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DOGA",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TOP",
+    "spot_exchanges": "HTX, MEXC, PancakeSwap v2 (BNB chain)",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CROS",
+    "spot_exchanges": "MEXC, Gate.io, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SCN",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MAPO",
+    "spot_exchanges": "MEXC, CoinEx, KuCoin, Gate.io, Bitget, HTX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NATIX",
+    "spot_exchanges": "MEXC, CoinEx, Gate.io, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ANON1",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "EDWIN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BTSLR",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PAW",
+    "spot_exchanges": "MEXC, CoinEx, Gate.io, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "HARD",
+    "spot_exchanges": "CoinEx, Gate.io, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SENSO",
+    "spot_exchanges": "MEXC, Gate.io, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MDOGS",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "IMAGE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FRC",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BAD",
+    "spot_exchanges": "MEXC, CoinEx, Gate.io, Poloniex, KCEX, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BOOPA",
+    "spot_exchanges": "WEEX, KCEX, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MAS",
+    "spot_exchanges": "MEXC, Bitget",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SOLVEX",
+    "spot_exchanges": "MEXC, KCEX, WEEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "EXS",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KNINE",
+    "spot_exchanges": "MEXC, Gate.io, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MBD",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CVN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CSIX",
+    "spot_exchanges": "MEXC, CoinEx, KuCoin, BloFin, Gate.io, WEEX, HTX, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "OMNIA",
+    "spot_exchanges": "MEXC, Gate.io, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BST",
+    "spot_exchanges": "MEXC, Gate.io, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "XONE",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AMERICA",
+    "spot_exchanges": "KCEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DEGENAI",
+    "spot_exchanges": "CoinEx, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KFI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "IUP",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "BUL",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LAIKAL2",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "GOB",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "GSYS",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TIME",
+    "spot_exchanges": "Bybit, CoinEx, Gate.io, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "HLC",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "XYM",
+    "spot_exchanges": "MEXC, CoinEx, KuCoin, Gate.io, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "RUNECOIN",
+    "spot_exchanges": "MEXC, CoinEx, OKX, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "EYWA",
+    "spot_exchanges": "MEXC, BitMart, Gate.io, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "STBU",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KOLSCAN",
+    "spot_exchanges": "KCEX, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "WEB3D",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DOGWIFHAT",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "RENQ",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ZYPTO",
+    "spot_exchanges": "MEXC, BitMart",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MUDOL2",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "WBSC",
+    "spot_exchanges": "KCEX, Bitget",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "GASS",
+    "spot_exchanges": "KCEX, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ARI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "HVLO",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FLUID",
+    "spot_exchanges": "MEXC, Bybit, CoinEx, OKX, BloFin, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "OMG",
+    "spot_exchanges": "MEXC, Bybit, CoinEx, KuCoin, PancakeSwap v2 (BNB chain), Gate.io, Bitget, Binance, HTX, KCEX, Bitrue, Poloniex",
+    "futures_exchanges": "Gate.io"
+  },
+  {
+    "name": "NCDT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NRN",
+    "spot_exchanges": "MEXC, Bybit, CoinEx, KuCoin, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "LUNCH",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KDT",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "DKT",
+    "spot_exchanges": "MEXC, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AB",
+    "spot_exchanges": "MEXC, PancakeSwap v3 (BNB chain), LBank, Gate.io, WEEX, Bitget, HTX, BitMart",
+    "futures_exchanges": "LBank, WEEX"
+  },
+  {
+    "name": "SKYA",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KIMA",
+    "spot_exchanges": "MEXC, KuCoin, Gate.io, BitMart, HTX, WEEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "EXPERT",
+    "spot_exchanges": "MEXC, KCEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "NXRA",
+    "spot_exchanges": "MEXC, CoinEx, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TUBE",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "AIDEV",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "XAR",
+    "spot_exchanges": "MEXC, Bybit, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "QDX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "OIK",
+    "spot_exchanges": "MEXC, Bybit, Uniswap v3 (BNB chain), PancakeSwap v3 (BNB chain), Bitget, WEEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TRAC",
+    "spot_exchanges": "MEXC, CoinEx, KuCoin, Binance.US, WOO X, Gate.io, Bitget, HTX, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "PATEX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "VPR",
+    "spot_exchanges": "MEXC, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MEER",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "JAILSTOOL",
+    "spot_exchanges": "CoinEx, KuCoin, Poloniex, KCEX, WEEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "EDLC",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "KIRBY",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CRCL",
+    "spot_exchanges": "KCEX, WEEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "HAI",
+    "spot_exchanges": "MEXC, Gate.io, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SOVRN",
+    "spot_exchanges": "HTX, MEXC, CoinEx, Gate.io",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SIF",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "VOLTAGE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "RWAINC",
+    "spot_exchanges": "MEXC, KCEX, Gate.io, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "CAU",
+    "spot_exchanges": "MEXC, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "POKT",
+    "spot_exchanges": "MEXC, CoinEx, KuCoin, Gate.io, Bitget, UpBit, KCEX, WEEX",
+    "futures_exchanges": "KCEX"
+  },
+  {
+    "name": "MOONCAT",
+    "spot_exchanges": "WEEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "MAZZE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "INVEST",
+    "spot_exchanges": "KCEX",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "TLF",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "FCT2",
+    "spot_exchanges": "MEXC, HTX, Poloniex",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "GHOAD",
+    "spot_exchanges": "MEXC, CoinEx",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "ISLM",
+    "spot_exchanges": "MEXC, Gate.io, KuCoin",
+    "futures_exchanges": ""
+  },
+  {
+    "name": "SWCH",
+    "spot_exchanges": "",
+    "futures_exchanges": ""
+  }
+]
