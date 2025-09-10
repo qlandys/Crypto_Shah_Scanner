@@ -1,14 +1,59 @@
+# freak_parser.py
+# CDP-attach к реальному Chrome (или автозапуск). Хранение сессии в отдельном профиле.
+# Тумблер NEED_LOGIN_FIRST_TIME:
+#   True  -> открыть окно логина один раз (ручной вход), потом работать по кукам
+#   False -> сразу работать по кукам, без лишних ожиданий
+# Переключатель USE_HEADLESS_CHROME:
+#   Работает только если профиль уже авторизован (ручной вход невозможен в headless).
+
 import asyncio
-import sys
 import os
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton,
-                             QVBoxLayout, QWidget, QLabel, QLineEdit,
-                             QListWidget, QListWidgetItem, QCheckBox,
-                             QHBoxLayout, QMessageBox, QGroupBox, QDialog)
+import sys
+import time
+import subprocess
+
+from PyQt5.QtWidgets import (
+    QApplication, QPushButton, QVBoxLayout, QWidget, QLabel, QLineEdit,
+    QListWidget, QListWidgetItem, QCheckBox, QHBoxLayout, QMessageBox,
+    QGroupBox, QDialog
+)
 from PyQt5.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, QThread, pyqtSignal
-from PyQt5.QtGui import QFont, QIcon, QColor
 from playwright.async_api import async_playwright
 
+# ===================== НАСТРОЙКИ =====================
+
+# Путь к Chrome (проверь у друга)
+CHROME_EXE = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+
+# CDP endpoint
+CDP_HOST = "127.0.0.1"
+CDP_PORT = 9222
+CDP_ENDPOINT = f"http://{CDP_HOST}:{CDP_PORT}"
+
+# Отдельный профиль (куки/сессия тут)
+CDP_USER_DATA_DIR = r"C:\ChromeTV"
+
+# Сколько ждать подъём CDP при автозапуске
+CDP_STARTUP_TIMEOUT_SEC = 20
+
+# --- Главный тумблер: нужен ли первый ручной вход сейчас? ---
+NEED_LOGIN_FIRST_TIME = False   # поставь True, если в этом профиле ещё не логинился
+
+# Headless для запускаемого нами Chrome (включай только когда логин уже есть)
+USE_HEADLESS_CHROME = False
+
+# «Быстрый режим» (минимум ожиданий), если логин не нужен
+FAST_WAIT_MS = 250
+SLOW_WAIT_MS = 1200
+
+# Таймауты (быстрый/медленный)
+NAV_TIMEOUT_MS_FAST = 40_000
+NAV_TIMEOUT_MS_SLOW = 90_000
+SEL_TIMEOUT_MS_FAST = 7_000
+SEL_TIMEOUT_MS_SLOW = 25_000
+
+
+# ===================== UI =====================
 
 class ExchangeListWidget(QListWidget):
     def __init__(self, parent=None):
@@ -31,63 +76,42 @@ class ExchangeListWidget(QListWidget):
             checkbox = QCheckBox(exchange)
             checkbox.setStyleSheet("""
                 QCheckBox {
-                    color: #DDDDDD;
-                    background-color: transparent;
-                    font-size: 13px;
-                    padding: 5px;
-                    spacing: 8px;
+                    color: #DDDDDD; background-color: transparent;
+                    font-size: 13px; padding: 5px; spacing: 8px;
                 }
                 QCheckBox::indicator {
-                    width: 18px;
-                    height: 18px;
-                    border: 2px solid #555555;
-                    border-radius: 4px;
-                    background-color: #3A3A3A;
+                    width: 18px; height: 18px; border: 2px solid #555555;
+                    border-radius: 4px; background-color: #3A3A3A;
                 }
-                QCheckBox::indicator:checked {
-                    border: 2px solid #6A5AF9;
-                    background-color: #6A5AF9;
-                }
-                QCheckBox::indicator:unchecked:hover {
-                    border: 2px solid #777777;
-                }
-                QCheckBox::indicator:checked:hover {
-                    border: 2px solid #5B4AE9;
-                    background-color: #5B4AE9;
-                }
+                QCheckBox::indicator:checked { border: 2px solid #6A5AF9; background-color: #6A5AF9; }
+                QCheckBox::indicator:unchecked:hover { border: 2px solid #777777; }
+                QCheckBox::indicator:checked:hover { border: 2px solid #5B4AE9; background-color: #5B4AE9; }
             """)
             checkbox.setChecked(False)
             self.setItemWidget(item, checkbox)
 
     def get_selected_exchanges(self):
-        selected = []
+        res = []
         for i in range(self.count()):
-            item = self.item(i)
-            widget = self.itemWidget(item)
-            if widget.isChecked():
-                selected.append(widget.text())
-        return selected
+            w = self.itemWidget(self.item(i))
+            if w.isChecked():
+                res.append(w.text())
+        return res
 
     def select_all(self):
         for i in range(self.count()):
-            item = self.item(i)
-            widget = self.itemWidget(item)
-            widget.setChecked(True)
+            self.itemWidget(self.item(i)).setChecked(True)
 
     def deselect_all(self):
         for i in range(self.count()):
-            item = self.item(i)
-            widget = self.itemWidget(item)
-            widget.setChecked(False)
+            self.itemWidget(self.item(i)).setChecked(False)
 
     def filter_items(self, text):
+        low = text.lower()
         for i in range(self.count()):
-            item = self.item(i)
-            widget = self.itemWidget(item)
-            if text.lower() in widget.text().lower():
-                item.setHidden(False)
-            else:
-                item.setHidden(True)
+            it = self.item(i)
+            w = self.itemWidget(it)
+            it.setHidden(low not in w.text().lower())
 
 
 class InstrumentTypeWidget(QWidget):
@@ -102,120 +126,49 @@ class InstrumentTypeWidget(QWidget):
         group = QGroupBox("Тип инструмента")
         group.setStyleSheet("""
             QGroupBox {
-                background-color: #2D2D2D;
-                border: 1px solid #444444;
-                border-radius: 8px;
-                margin-top: 1ex;
-                padding: 15px;
-                color: #DDDDDD;
-                font-weight: bold;
-                font-size: 14px;
+                background-color: #2D2D2D; border: 1px solid #444444; border-radius: 8px;
+                margin-top: 1ex; padding: 15px; color: #DDDDDD; font-weight: bold; font-size: 14px;
             }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 5px;
-                background-color: transparent;
-                margin-top: 10px;
-            }
+            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; background: transparent; }
         """)
-        group_layout = QVBoxLayout(group)
+        gl = QVBoxLayout(group)
 
-        self.spot_checkbox = QCheckBox("Спот")
-        self.futures_checkbox = QCheckBox("Фьючерсы")
-        self.perpetual_checkbox = QCheckBox("Бессрочные контракты")
+        self.spot = QCheckBox("Спот")
+        self.fut = QCheckBox("Фьючерсы")
+        self.perp = QCheckBox("Бессрочные контракты")
 
-        # Стили для чекбоксов
-        checkbox_style = """
-            QCheckBox {
-                color: #DDDDDD;
-                background-color: transparent;
-                font-size: 12px;
-                padding: 5px;
-            }
-            QCheckBox::indicator {
-                width: 16px;
-                height: 16px;
-            }
-            QCheckBox::indicator:unchecked {
-                border: 1px solid #555555;
-                background-color: #3A3A3A;
-                border-radius: 3px;
-            }
-            QCheckBox::indicator:checked {
-                border: 1px solid #6A5AF9;
-                background-color: #6A5AF9;
-                border-radius: 3px;
-            }
+        css = """
+            QCheckBox { color:#DDDDDD; background:transparent; font-size:12px; padding:5px; }
+            QCheckBox::indicator { width:16px; height:16px; }
+            QCheckBox::indicator:unchecked { border:1px solid #555555; background:#3A3A3A; border-radius:3px; }
+            QCheckBox::indicator:checked   { border:1px solid #6A5AF9; background:#6A5AF9; border-radius:3px; }
         """
+        for cb in (self.spot, self.fut, self.perp):
+            cb.setStyleSheet(css)
+            gl.addWidget(cb)
 
-        self.spot_checkbox.setStyleSheet(checkbox_style)
-        self.futures_checkbox.setStyleSheet(checkbox_style)
-        self.perpetual_checkbox.setStyleSheet(checkbox_style)
+        row = QHBoxLayout()
+        b1 = QPushButton("Выбрать все"); b1.setStyleSheet(
+            "QPushButton{background:#6A5AF9;color:#fff;border:none;padding:8px 15px;border-radius:4px;font-size:12px;}QPushButton:hover{background:#5B4AE9;}")
+        b2 = QPushButton("Снять все");   b2.setStyleSheet(
+            "QPushButton{background:#444;color:#DDD;border:none;padding:8px 15px;border-radius:4px;font-size:12px;}QPushButton:hover{background:#555;}")
+        b1.clicked.connect(self.select_all); b2.clicked.connect(self.deselect_all)
+        row.addWidget(b1); row.addWidget(b2); gl.addLayout(row)
 
-        group_layout.addWidget(self.spot_checkbox)
-        group_layout.addWidget(self.futures_checkbox)
-        group_layout.addWidget(self.perpetual_checkbox)
-
-        buttons_layout = QHBoxLayout()
-        self.select_all_btn = QPushButton("Выбрать все")
-        self.select_all_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #6A5AF9;
-                color: white;
-                border: none;
-                padding: 8px 15px;
-                border-radius: 4px;
-                font-weight: normal;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #5B4AE9;
-            }
-        """)
-        self.select_all_btn.clicked.connect(self.select_all)
-        buttons_layout.addWidget(self.select_all_btn)
-
-        self.deselect_all_btn = QPushButton("Снять все")
-        self.deselect_all_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #444444;
-                color: #DDDDDD;
-                border: none;
-                padding: 8px 15px;
-                border-radius: 4px;
-                font-weight: normal;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #555555;
-            }
-        """)
-        self.deselect_all_btn.clicked.connect(self.deselect_all)
-        buttons_layout.addWidget(self.deselect_all_btn)
-
-        group_layout.addLayout(buttons_layout)
         layout.addWidget(group)
 
     def get_selected_types(self):
-        selected = []
-        if self.spot_checkbox.isChecked():
-            selected.append("Спот")
-        if self.futures_checkbox.isChecked():
-            selected.append("Фьючерсы")
-        if self.perpetual_checkbox.isChecked():
-            selected.append("Бессрочные контракты")
-        return selected
+        res = []
+        if self.spot.isChecked(): res.append("Спот")
+        if self.fut.isChecked(): res.append("Фьючерсы")
+        if self.perp.isChecked(): res.append("Бессрочные контракты")
+        return res
 
     def select_all(self):
-        self.spot_checkbox.setChecked(True)
-        self.futures_checkbox.setChecked(True)
-        self.perpetual_checkbox.setChecked(True)
+        self.spot.setChecked(True); self.fut.setChecked(True); self.perp.setChecked(True)
 
     def deselect_all(self):
-        self.spot_checkbox.setChecked(False)
-        self.futures_checkbox.setChecked(False)
-        self.perpetual_checkbox.setChecked(False)
+        self.spot.setChecked(False); self.fut.setChecked(False); self.perp.setChecked(False)
 
 
 class ParserThread(QThread):
@@ -223,26 +176,19 @@ class ParserThread(QThread):
     finished_signal = pyqtSignal()
     error_signal = pyqtSignal(str)
 
-    def __init__(self, exchange_names, instrument_types, filename):
+    def __init__(self, exchanges, types_, filename):
         super().__init__()
-        self.exchange_names = exchange_names
-        self.instrument_types = instrument_types
+        self.exchanges = exchanges
+        self.types_ = types_
         self.filename = filename
 
     def run(self):
         try:
-            # Создаем новый event loop для этого потока
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-
-            # Запускаем парсинг
             loop.run_until_complete(tradingview_parser(
-                self.exchange_names,
-                self.instrument_types,
-                self.filename,
-                self.progress_signal.emit
+                self.exchanges, self.types_, self.filename, self.progress_signal.emit
             ))
-
             self.finished_signal.emit()
         except Exception as e:
             self.error_signal.emit(str(e))
@@ -253,474 +199,382 @@ class TradingViewParserGUI(QDialog):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("TradingView Parser")
+        self.setWindowTitle("TradingView Parser — Chrome (CDP)")
         self.setGeometry(100, 100, 900, 900)
         self.is_parsing = False
         self.apply_dark_theme()
 
-        # Создаем основной layout
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(15)
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(20, 20, 20, 20)
+        lay.setSpacing(15)
 
-        # Заголовок
-        title_label = QLabel("Настройки парсера TradingView")
-        title_label.setAlignment(Qt.AlignCenter)
-        title_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #DDDDDD;")
-        layout.addWidget(title_label)
+        title = QLabel("Настройки парсера TradingView")
+        title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet("font-size:18px;font-weight:bold;color:#DDD;")
+        lay.addWidget(title)
 
-        # Поле для названия файла
-        filename_layout = QHBoxLayout()
-        filename_label = QLabel("Название TXT файла:")
-        filename_label.setStyleSheet("color: #DDDDDD;")
-        filename_layout.addWidget(filename_label)
+        row = QHBoxLayout()
+        row.addWidget(QLabel("Название TXT файла:"))
+        self.filename = QLineEdit("tickers")
+        self.filename.setPlaceholderText("Введите название файла...")
+        self.filename.setStyleSheet(
+            "QLineEdit{background:#3A3A3A;color:#DDD;border:1px solid #555;border-radius:4px;padding:8px 12px;font-size:13px;}")
+        row.addWidget(self.filename)
+        lay.addLayout(row)
 
-        self.filename_input = QLineEdit()
-        self.filename_input.setPlaceholderText("Введите название файла...")
-        self.filename_input.setText("tickers")
-        self.filename_input.setStyleSheet("""
-            QLineEdit {
-                background-color: #3A3A3A;
-                color: #DDDDDD;
-                border: 1px solid #555555;
-                border-radius: 4px;
-                padding: 8px 12px;
-                font-size: 13px;
-            }
+        self.types = InstrumentTypeWidget()
+        lay.addWidget(self.types)
+
+        srow = QHBoxLayout()
+        srow.addWidget(QLabel("Поиск бирж:"))
+        self.search = QLineEdit()
+        self.search.setPlaceholderText("Введите название биржи...")
+        self.search.setStyleSheet(
+            "QLineEdit{background:#3A3A3A;color:#DDD;border:1px solid #555;border-radius:4px;padding:8px 12px;font-size:13px;}")
+        self.search.textChanged.connect(self.filter_exchanges)
+        srow.addWidget(self.search)
+        lay.addLayout(srow)
+
+        lay.addWidget(QLabel("Выберите биржи:"))
+        self.exlist = ExchangeListWidget()
+        self.exlist.setStyleSheet("""
+            QListWidget{background:#3A3A3A;color:#DDD;border:1px solid #555;border-radius:4px;font-size:13px;}
+            QListWidget::item{padding:8px 12px;border-bottom:1px solid #444;height:30px;}
+            QListWidget::item:hover{background:#4A4A4A;}
         """)
-        filename_layout.addWidget(self.filename_input)
-        layout.addLayout(filename_layout)
+        self.exlist.itemClicked.connect(self.on_ex_item_clicked)
+        lay.addWidget(self.exlist)
 
-        # Тип инструмента
-        self.instrument_type_widget = InstrumentTypeWidget()
-        layout.addWidget(self.instrument_type_widget)
+        buttons = QHBoxLayout()
+        b_all = QPushButton("Выбрать все"); b_all.setStyleSheet(
+            "QPushButton{background:#6A5AF9;color:#fff;border:none;padding:8px 15px;border-radius:4px;font-size:12px;}QPushButton:hover{background:#5B4AE9;}")
+        b_none = QPushButton("Снять все");   b_none.setStyleSheet(
+            "QPushButton{background:#444;color:#DDD;border:none;padding:8px 15px;border-radius:4px;font-size:12px;}QPushButton:hover{background:#555;}")
+        b_all.clicked.connect(self.exlist.select_all); b_none.clicked.connect(self.exlist.deselect_all)
+        buttons.addWidget(b_all); buttons.addWidget(b_none); lay.addLayout(buttons)
 
-        # Поиск бирж
-        search_layout = QHBoxLayout()
-        search_label = QLabel("Поиск бирж:")
-        search_label.setStyleSheet("color: #DDDDDD;")
-        search_layout.addWidget(search_label)
-
-        self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Введите название биржи...")
-        self.search_input.setStyleSheet("""
-            QLineEdit {
-                background-color: #3A3A3A;
-                color: #DDDDDD;
-                border: 1px solid #555555;
-                border-radius: 4px;
-                padding: 8px 12px;
-                font-size: 13px;
-            }
+        self.run_btn = QPushButton("Собрать список тикеров")
+        self.run_btn.setStyleSheet("""
+            QPushButton{background:#6A5AF9;color:#fff;border:none;padding:12px 20px;border-radius:6px;font-weight:bold;font-size:14px;}
+            QPushButton:hover{background:#5B4AE9;} QPushButton:disabled{background:#444;color:#888;}
         """)
-        self.search_input.textChanged.connect(self.filter_exchanges)
-        search_layout.addWidget(self.search_input)
-        layout.addLayout(search_layout)
+        self.run_btn.clicked.connect(self.run_parser)
+        lay.addWidget(self.run_btn)
 
-        # Список бирж с чекбоксами
-        layout.addWidget(QLabel("Выберите биржи:"))
-        self.exchange_list = ExchangeListWidget()
-        self.exchange_list.setStyleSheet("""
-            QListWidget {
-                background-color: #3A3A3A;
-                color: #DDDDDD;
-                border: 1px solid #555555;
-                border-radius: 4px;
-                font-size: 13px;
-            }
-            QListWidget::item {
-                padding: 8px 12px;
-                border-bottom: 1px solid #444444;
-                height: 30px;
-            }
-            QListWidget::item:hover {
-                background-color: #4A4A4A;
-            }
-        """)
-        self.exchange_list.itemClicked.connect(self.on_exchange_item_clicked)
-        layout.addWidget(self.exchange_list)
+        self.status = QLabel("Готов к работе")
+        self.status.setAlignment(Qt.AlignCenter)
+        self.status.setStyleSheet("color:#DDD;font-size:12px;")
+        lay.addWidget(self.status)
 
-        # Кнопки выбора всех/снятия всех для бирж
-        buttons_layout = QHBoxLayout()
-        self.select_all_btn = QPushButton("Выбрать все")
-        self.select_all_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #6A5AF9;
-                color: white;
-                border: none;
-                padding: 8px 15px;
-                border-radius: 4px;
-                font-weight: normal;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #5B4AE9;
-            }
-        """)
-        self.select_all_btn.clicked.connect(self.exchange_list.select_all)
-        buttons_layout.addWidget(self.select_all_btn)
+        self.tmr = QTimer()
+        self.tmr.timeout.connect(self._flush_status)
+        self._q = []
 
-        self.deselect_all_btn = QPushButton("Снять все")
-        self.deselect_all_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #444444;
-                color: #DDDDDD;
-                border: none;
-                padding: 8px 15px;
-                border-radius: 4px;
-                font-weight: normal;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #555555;
-            }
-        """)
-        self.deselect_all_btn.clicked.connect(self.exchange_list.deselect_all)
-        buttons_layout.addWidget(self.deselect_all_btn)
-        layout.addLayout(buttons_layout)
+        self.anim = QPropertyAnimation(self.run_btn, b"geometry")
+        self.anim.setDuration(300)
+        self.anim.setEasingCurve(QEasingCurve.OutCubic)
 
-        # Кнопка запуска
-        self.run_button = QPushButton("Собрать список тикеров")
-        self.run_button.setStyleSheet("""
-            QPushButton {
-                background-color: #6A5AF9;
-                color: white;
-                border: none;
-                padding: 12px 20px;
-                border-radius: 6px;
-                font-weight: bold;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #5B4AE9;
-            }
-            QPushButton:disabled {
-                background-color: #444444;
-                color: #888888;
-            }
-        """)
-        self.run_button.clicked.connect(self.run_parser)
-        layout.addWidget(self.run_button)
-
-        # Статус
-        self.status_label = QLabel("Готов к работе")
-        self.status_label.setAlignment(Qt.AlignCenter)
-        self.status_label.setStyleSheet("color: #DDDDDD; font-size: 12px;")
-        layout.addWidget(self.status_label)
-
-        # Таймер для обновления статуса
-        self.status_timer = QTimer()
-        self.status_timer.timeout.connect(self.update_status)
-        self.status_messages = []
-        self.current_status = ""
-
-        # Анимация для кнопки
-        self.animation = QPropertyAnimation(self.run_button, b"geometry")
-        self.animation.setDuration(300)
-        self.animation.setEasingCurve(QEasingCurve.OutCubic)
-
-    def on_exchange_item_clicked(self, item):
-        widget = self.exchange_list.itemWidget(item)
-        if widget and isinstance(widget, QCheckBox):
-            widget.setChecked(not widget.isChecked())
+    def on_ex_item_clicked(self, item):
+        w = self.exlist.itemWidget(item)
+        if w and isinstance(w, QCheckBox):
+            w.setChecked(not w.isChecked())  # toggle
 
     def apply_dark_theme(self):
-        self.setStyleSheet("""
-            QWidget {
-                background-color: #1E1E1E;
-                color: #DDDDDD;
-            }
-            QToolTip {
-                background-color: #3A3A3A;
-                color: #DDDDDD;
-                border: 1px solid #555555;
-                border-radius: 4px;
-                padding: 5px;
-            }
-        """)
+        self.setStyleSheet(
+            "QWidget{background:#1E1E1E;color:#DDD;} QToolTip{background:#3A3A3A;color:#DDD;border:1px solid #555;border-radius:4px;padding:5px;}")
 
     def filter_exchanges(self):
-        text = self.search_input.text()
-        self.exchange_list.filter_items(text)
+        self.exlist.filter_items(self.search.text())
 
-    def update_status(self):
-        if self.status_messages:
-            self.current_status = self.status_messages.pop(0)
-            self.status_label.setText(self.current_status)
+    def _flush_status(self):
+        if self._q:
+            self.status.setText(self._q.pop(0))
 
-    def add_status_message(self, message):
-        self.status_messages.append(message)
-        if not self.status_timer.isActive():
-            self.status_timer.start(100)
+    def log(self, msg):
+        self._q.append(msg)
+        if not self.tmr.isActive():
+            self.tmr.start(100)
 
     def run_parser(self):
         if self.is_parsing:
             return
 
-        selected_exchanges = self.exchange_list.get_selected_exchanges()
-        selected_types = self.instrument_type_widget.get_selected_types()
-        filename = self.filename_input.text().strip()
+        exchanges = self.exlist.get_selected_exchanges()
+        types_ = self.types.get_selected_types()
+        filename = self.filename.text().strip()
 
         if not filename:
             QMessageBox.warning(self, "Ошибка", "Введите название файла!")
             return
-
-        if not selected_exchanges:
+        if not exchanges:
             QMessageBox.warning(self, "Ошибка", "Выберите хотя бы одну биржу!")
             return
-
-        if not selected_types:
+        if not types_:
             QMessageBox.warning(self, "Ошибка", "Выберите хотя бы один тип инструмента!")
             return
+        if not filename.endswith(".txt"):
+            filename += ".txt"
 
-        # Всегда добавляем расширение .txt, если его нет
-        if not filename.endswith('.txt'):
-            filename += '.txt'
+        os.makedirs("Tickers", exist_ok=True)
+        full_path = os.path.join("Tickers", filename)
 
-        # Создаем папку Tickers, если она не существует
-        tickers_dir = "Tickers"
-        if not os.path.exists(tickers_dir):
-            try:
-                os.makedirs(tickers_dir)
-                self.add_status_message(f"Создана папка {tickers_dir}")
-            except Exception as e:
-                self.add_status_message(f"Ошибка при создании папки: {str(e)}")
-                QMessageBox.critical(self, "Ошибка", f"Не удалось создать папку {tickers_dir}: {str(e)}")
-                return
-
-        # Проверяем, существует ли файл
-        full_path = os.path.join(tickers_dir, filename)
         if os.path.exists(full_path):
-            reply = QMessageBox.question(self, "Файл существует",
-                                         f"Файл {filename} уже существует в папке {tickers_dir}. Перезаписать?",
-                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if reply == QMessageBox.No:
-                self.add_status_message("Операция отменена пользователем")
+            if QMessageBox.question(self, "Файл существует", f"{filename} уже есть. Перезаписать?",
+                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No) == QMessageBox.No:
+                self.log("Операция отменена пользователем")
                 return
 
         self.is_parsing = True
-        self.run_button.setEnabled(False)
-        self.add_status_message("Запуск парсера...")
+        self.run_btn.setEnabled(False)
+        self.log("Запуск парсера (CDP attach)...")
+        g = self.run_btn.geometry()
+        self.anim.setStartValue(g)
+        self.anim.setEndValue(g.adjusted(0, 5, 0, 5))
+        self.anim.start()
 
-        # Анимация нажатия кнопки
-        current_geometry = self.run_button.geometry()
-        self.animation.setStartValue(current_geometry)
-        self.animation.setEndValue(current_geometry.adjusted(0, 5, 0, 5))
-        self.animation.start()
+        self.thread = ParserThread(exchanges, types_, full_path)
+        self.thread.progress_signal.connect(self.log)
+        self.thread.finished_signal.connect(self._ok)
+        self.thread.error_signal.connect(self._err)
+        self.thread.start()
 
-        # Запускаем парсер в отдельном потоке
-        self.parser_thread = ParserThread(selected_exchanges, selected_types, full_path)
-        self.parser_thread.progress_signal.connect(self.add_status_message)
-        self.parser_thread.finished_signal.connect(self.on_parser_finished)
-        self.parser_thread.error_signal.connect(self.on_parser_error)
-        self.parser_thread.start()
-
-    def on_parser_finished(self):
+    def _ok(self):
         self.is_parsing = False
-        self.run_button.setEnabled(True)
+        self.run_btn.setEnabled(True)
+        g = self.run_btn.geometry()
+        self.anim.setStartValue(g)
+        self.anim.setEndValue(g.adjusted(0, -5, 0, -5))
+        self.anim.start()
+        self.log("Парсинг завершён успешно!")
+        QMessageBox.information(self, "Успех", "Парсинг завершён успешно!")
 
-        # Возвращаем кнопку в исходное положение
-        current_geometry = self.run_button.geometry()
-        self.animation.setStartValue(current_geometry)
-        self.animation.setEndValue(current_geometry.adjusted(0, -5, 0, -5))
-        self.animation.start()
-
-        self.add_status_message("Парсинг завершен успешно!")
-        QMessageBox.information(self, "Успех", "Парсинг завершен успешно!")
-
-    def on_parser_error(self, error_msg):
+    def _err(self, msg):
         self.is_parsing = False
-        self.run_button.setEnabled(True)
-
-        # Возвращаем кнопку в исходное положение
-        current_geometry = self.run_button.geometry()
-        self.animation.setStartValue(current_geometry)
-        self.animation.setEndValue(current_geometry.adjusted(0, -5, 0, -5))
-        self.animation.start()
-
-        self.add_status_message(f"Ошибка: {error_msg}")
-
-        # Проверяем, является ли ошибка случаем "нет данных"
-        if "NO_DATA:" in error_msg:
-            # Извлекаем сообщение для пользователя
-            user_message = error_msg.split("NO_DATA:")[1]
-            QMessageBox.information(self, "Информация", user_message)
+        self.run_btn.setEnabled(True)
+        g = self.run_btn.geometry()
+        self.anim.setStartValue(g)
+        self.anim.setEndValue(g.adjusted(0, -5, 0, -5))
+        self.anim.start()
+        self.log(f"Ошибка: {msg}")
+        if "NO_DATA:" in msg:
+            QMessageBox.information(self, "Информация", msg.split("NO_DATA:")[1])
         else:
-            QMessageBox.critical(self, "Ошибка", f"Произошла ошибка: {error_msg}")
+            QMessageBox.critical(self, "Ошибка", f"Произошла ошибка: {msg}")
 
-    def closeEvent(self, event):
-        # Испускаем сигнал finished при закрытии окна
+    def closeEvent(self, e):
         self.finished.emit()
-        event.accept()
+        e.accept()
 
 
-async def tradingview_parser(exchange_names, instrument_types, filename, status_callback):
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
-        context = await browser.new_context()
-        page = await context.new_page()
+# ===================== CDP ХЕЛПЕРЫ =====================
 
+def _build_chrome_cmd():
+    os.makedirs(CDP_USER_DATA_DIR, exist_ok=True)
+    cmd = [
+        CHROME_EXE,
+        f"--remote-debugging-port={CDP_PORT}",
+        f'--user-data-dir={CDP_USER_DATA_DIR}',
+        "--no-first-run", "--no-default-browser-check"
+    ]
+    if USE_HEADLESS_CHROME:
+        cmd.append("--headless=new")
+    return cmd
+
+async def _connect_or_launch_cdp(p, log):
+    """
+    Пытаемся подключиться к существующему CDP.
+    Если не вышло — запускаем Chrome сами. Возвращаем (browser, context, launched, proc).
+    """
+    # 1) Подключаемся к уже запущенному Chrome
+    try:
+        log(f"Пробую подключиться к CDP: {CDP_ENDPOINT}...")
+        br = await p.chromium.connect_over_cdp(CDP_ENDPOINT)
+        ctx = br.contexts[0] if br.contexts else await br.new_context()
+        log("CDP подключение установлено (подцепился к уже запущенному Chrome).")
+        return br, ctx, False, None
+    except Exception:
+        log("CDP недоступен. Запускаю Chrome сам...")
+
+    # 2) Запускаем Chrome
+    launched_proc = None
+    try:
+        launched_proc = subprocess.Popen(
+            _build_chrome_cmd(),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=(subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
+        )
+    except Exception as e:
+        raise RuntimeError(f"Не удалось запустить Chrome: {e}")
+
+    # 3) Ждём, пока поднимется CDP
+    start = time.time()
+    last_err = None
+    while time.time() - start < CDP_STARTUP_TIMEOUT_SEC:
         try:
-            status_callback("Переходим на страницу скринера...")
-            await page.goto('https://ru.tradingview.com/cex-screener/', timeout=60000)
-
-            status_callback("Кликаем по кнопке 'Котируемая валюта'...")
-            await page.click('text=Котируемая валюта')
-
-            status_callback("Сразу вводим USDT...")
-            await page.type('input[placeholder="Поиск"]', 'USDT', delay=100)
-
-            status_callback("Ждем появления результатов...")
-            await page.wait_for_timeout(2000)
-
-            status_callback("Выбираем USDT Tether...")
-            await page.click('div.middle-LSK1huUA:has-text("Tether USDt")')
-
-            status_callback("Ждем редиректа на страницу авторизации...")
-            await page.wait_for_timeout(3000)
-
-            # Сначала авторизация
-            status_callback("Ищем iframe с кнопкой Google...")
-            iframe = await page.wait_for_selector('iframe.L5Fo6c-PQbLGe', timeout=30000)
-
-            status_callback("Кликаем непосредственно на iframe...")
-            box = await iframe.bounding_box()
-            await page.mouse.click(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
-
-            status_callback("Ждем открытия popup...")
-            async with page.expect_popup() as popup_info:
-                await page.wait_for_timeout(2000)
-
-            google_popup = await popup_info.value
-
-            status_callback("Вводим email...")
-            await google_popup.fill('input[type="email"]', 'ewb9FyQOimE1K@rpilosj.com')
-            await google_popup.keyboard.press('Enter')
-
-            status_callback("Ждем загрузки поля пароля...")
-            await google_popup.wait_for_timeout(3000)
-
-            status_callback("Вводим пароль...")
-            await google_popup.fill('input[type="password"]', 'V9YC0IA20ulov')
-            await google_popup.keyboard.press('Enter')
-
-            status_callback("Ожидаем завершения авторизации...")
-            await page.wait_for_url('https://ru.tradingview.com/cex-screener/', timeout=30000)
-            status_callback("Успешная авторизация!")
-
-            # После авторизации применяем ускоренные методы
-            status_callback(f"Применяем фильтр для бирж: {exchange_names}")
-            await apply_exchange_filters_fast(page, exchange_names, status_callback)
-
-            # Применяем фильтр по типу инструментов
-            status_callback(f"Применяем фильтр для типов инструментов: {instrument_types}")
-            await apply_instrument_type_filters_fast(page, instrument_types, status_callback)
-
-            # Ждем загрузки данных и проверяем наличие надписи "Нет подходящих символов"
-            status_callback("Проверяем наличие данных...")
-
-            # Даем время для применения фильтров
-            await page.wait_for_timeout(3000)
-
-            # Проверяем наличие надписи "Нет подходящих символов"
-            no_data_element = await page.query_selector('text=Нет подходящих символов')
-            if no_data_element:
-                status_callback("На выбранных биржах нет инструментов для выбранных фильтров")
-                # Закрываем браузер
-                await browser.close()
-                # Возвращаем специальный код ошибки для обработки в GUI
-                raise Exception("NO_DATA:На выбранных биржах нет инструментов для выбранных фильтров")
-
-            # Если надписи нет, продолжаем обычную обработку
-            status_callback("Ожидаем загрузки таблицы...")
-            await page.wait_for_selector('.row-RdUXZpkv.listRow', timeout=10000)
-
-            # Прокручиваем таблицу до конца, чтобы загрузились все данные
-            status_callback("Прокручиваем таблицу для загрузки всех данных...")
-            current_count = await scroll_table_to_bottom_fast(page, status_callback)
-
-            # Парсим все названия монет
-            status_callback("Парсим тикеры...")
-            tickers = await page.evaluate('''() => {
-                const items = [];
-                const rows = document.querySelectorAll('.row-RdUXZpkv.listRow');
-
-                for (const row of rows) {
-                    const tickerElement = row.querySelector('.tickerName-GrtoTeat');
-                    if (tickerElement) {
-                        items.push(tickerElement.textContent);
-                    }
-                }
-
-                return items;
-            }''')
-
-            status_callback(f"Найдено {len(tickers)} тикеров")
-
-            # Сохраняем в файл (каждый тикер с новой строки)
-            if tickers:
-                with open(filename, 'w', encoding='utf-8') as f:
-                    for ticker in tickers:
-                        f.write(ticker + '\n')
-                status_callback(f"Тикеры успешно сохранены в {filename}")
-            else:
-                status_callback("Не удалось найти тикеры")
-
-            # Закрываем браузер после завершения
-            await browser.close()
-            status_callback("Браузер закрыт.")
-
+            br = await p.chromium.connect_over_cdp(CDP_ENDPOINT)
+            ctx = br.contexts[0] if br.contexts else await br.new_context()
+            log("Chrome запущен и CDP готов.")
+            return br, ctx, True, launched_proc
         except Exception as e:
-            status_callback(f"Произошла ошибка: {e}")
-            try:
-                await page.screenshot(path='error_screenshot.png')
-            except:
-                pass
-            try:
-                await browser.close()
-            except:
-                pass
-            raise e
+            last_err = e
+            await asyncio.sleep(0.5)
+
+    # Если не поднялся — гасим процесс
+    try:
+        if launched_proc and launched_proc.poll() is None:
+            if os.name == "nt":
+                subprocess.run(["taskkill", "/F", "/T", "/PID", str(launched_proc.pid)],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            else:
+                launched_proc.terminate()
+    except Exception:
+        pass
+    raise RuntimeError(f"CDP не поднялся за {CDP_STARTUP_TIMEOUT_SEC} сек. Последняя ошибка: {last_err}")
+
+async def _ensure_login_if_needed(page, log, fast_mode: bool):
+    """
+    Если NEED_LOGIN_FIRST_TIME=True → ведём на /#signin и ждём меню пользователя.
+    Если False → ничего не делаем (сразу работаем).
+    """
+    # Настрой таймауты согласно режиму
+    page.set_default_timeout(SEL_TIMEOUT_MS_FAST if fast_mode else SEL_TIMEOUT_MS_SLOW)
+    page.set_default_navigation_timeout(NAV_TIMEOUT_MS_FAST if fast_mode else NAV_TIMEOUT_MS_SLOW)
+
+    if not NEED_LOGIN_FIRST_TIME:
+        # Лёгкий прогрев домена (best effort), но без падений
+        try:
+            await page.goto(
+                "https://ru.tradingview.com/",
+                timeout=(NAV_TIMEOUT_MS_FAST if fast_mode else NAV_TIMEOUT_MS_SLOW)
+            )
+        except Exception:
+            pass
+        return
+
+    # Нужен первый вход
+    if USE_HEADLESS_CHROME:
+        raise RuntimeError("Нужна авторизация TradingView. Выключи headless (USE_HEADLESS_CHROME=False) и войди один раз.")
+
+    log("Первый вход: открываю https://ru.tradingview.com/#signin — войди в аккаунт (можно Google).")
+    await page.goto(
+        "https://ru.tradingview.com/#signin",
+        timeout=(NAV_TIMEOUT_MS_FAST if fast_mode else NAV_TIMEOUT_MS_SLOW)
+    )
+
+    # ждём до 5 минут появления признака входа
+    timeout_ms = 300_000
+    step = 5_000
+    waited = 0
+    while waited < timeout_ms:
+        try:
+            if await page.locator('text=Профиль, text=Profile, [data-name="header-user-menu-button"]').first.is_visible():
+                log("Вход подтверждён. Продолжаем.")
+                return
+        except Exception:
+            pass
+        await asyncio.sleep(step / 1000)
+        waited += step
+        log("Жду подтверждение входа...")
+
+    log("Не дождался подтверждения входа — продолжаю (возможно уже OK).")
 
 
-async def scroll_table_to_bottom_fast(page, status_callback):
-    """Прокручивает таблицу до конца для загрузки всех данных (оптимизированная версия)"""
-    status_callback("Начинаем прокрутку таблицы...")
+# ===================== ЛОГИКА СТРАНИЦЫ (селекторы как раньше) =====================
 
-    # Получаем общее количество тикеров из data-matches
+async def _click_text_any(page, texts, timeout=3000):
+    for t in texts:
+        try:
+            await page.click(f'text={t}', timeout=timeout)
+            return True
+        except Exception:
+            continue
+    return False
+
+async def apply_exchange_filters_fast(page, exch, log, fast_mode: bool):
+    log("Открываю фильтр Биржа/Exchange...")
+    if not await _click_text_any(page, ["Биржа", "Exchange"], timeout=5000):
+        raise Exception("Не нашёл кнопку 'Биржа/Exchange'")
+
+    search_input = await page.wait_for_selector('input[placeholder="Поиск"], input[placeholder="Search"]', timeout=5000)
+    for name in exch:
+        await search_input.click(click_count=3)
+        await search_input.press('Backspace')
+        await search_input.type(name, delay=0 if fast_mode else 50)
+        await page.wait_for_timeout(FAST_WAIT_MS if fast_mode else 500)
+        try:
+            await page.click(f'div.middle-LSK1huUA:has-text("{name}")', timeout=3000)
+        except Exception as e:
+            log(f"Не получилось выбрать биржу {name}: {e}")
+        await page.wait_for_timeout(FAST_WAIT_MS if fast_mode else 300)
+
+    await page.keyboard.press('Escape')
+    log("Все биржи выбраны успешно!")
+
+async def apply_instrument_type_filters_fast(page, types_, log, fast_mode: bool):
+    log("Открываю фильтр Тип инструмента/Instrument type...")
+    if not await _click_text_any(page, ["Тип инструмента", "Instrument type"], timeout=5000):
+        raise Exception("Не нашёл кнопку 'Тип инструмента/Instrument type'")
+    await page.wait_for_timeout(FAST_WAIT_MS if fast_mode else 1000)
+
+    for t in types_:
+        try:
+            await page.click(f'div.middle-LSK1huUA:has-text("{t}")', timeout=2000)
+            log(f"Тип инструмента {t} выбран успешно")
+        except Exception as e:
+            log(f"Не удалось выбрать тип инструмента {t}: {e}")
+        await page.wait_for_timeout(FAST_WAIT_MS if fast_mode else 200)
+
+    await page.keyboard.press('Escape')
+    log("Все типы инструментов выбраны успешно!")
+
+# НОВОЕ: централизованная проверка «нет данных»
+async def _fail_if_no_symbols(page, log, exchanges, types_):
+    try:
+        banner = page.locator('text=Нет подходящих символов, text=No symbols match').first
+        if await banner.is_visible():
+            msg = f"На выбранных биржах ({', '.join(exchanges)}) нет инструментов для типов: {', '.join(types_)}"
+            raise Exception(f"NO_DATA:{msg}")
+    except Exception:
+        pass
+    try:
+        rows = await page.evaluate('''() => document.querySelectorAll('.row-RdUXZpkv.listRow').length''')
+    except Exception:
+        rows = 0
+    if rows == 0:
+        msg = f"На выбранных биржах ({', '.join(exchanges)}) нет инструментов для типов: {', '.join(types_)}"
+        raise Exception(f"NO_DATA:{msg}")
+
+# СТАРАЯ ЛОГИКА: докручиваем строго до data-matches
+async def scroll_table_to_bottom_fast(page, log, fast_mode: bool):
+    """Прокручивает таблицу до конца, строго до total_matches из data-matches (как было раньше)."""
+    log("Начинаем прокрутку таблицы...")
+
     total_matches = await page.evaluate('''() => {
-        // Ищем элемент с data-matches, который находится в заголовке столбца "Инструмент"
         const headerCells = document.querySelectorAll('.tickerCellData-cfjBjL5J');
         for (let cell of headerCells) {
             let headerText = cell.querySelector('.headCellTitle-MSg2GmPp');
             if (headerText && headerText.textContent.includes('Инструмент')) {
                 let matchesElem = cell.querySelector('[data-matches]');
-                if (matchesElem) {
-                    return parseInt(matchesElem.getAttribute('data-matches'));
-                }
+                if (matchesElem) return parseInt(matchesElem.getAttribute('data-matches'));
             }
         }
         return 0;
     }''')
 
-    # Если data-matches не найдено, проверяем наличие строк в таблице
     if total_matches == 0:
-        # Проверяем, есть ли вообще строки в таблице
         rows_count = await page.evaluate('''() => {
             return document.querySelectorAll('.row-RdUXZpkv.listRow').length;
         }''')
-
         if rows_count == 0:
-            status_callback("На выбранных биржах нет тикеров для выбранных фильтров")
-            raise Exception("На выбранных биржах нет тикеров для выбранных фильтров")
+            log("На выбранных биржах нет тикеров для выбранных фильтров")
+            raise Exception("NO_DATA:На выбранных биржах нет тикеров для выбранных фильтров")
         else:
-            # Если строки есть, но data-matches не найдено, используем количество строк
             total_matches = rows_count
-            status_callback(f"Найдено {total_matches} тикеров (data-matches не доступен)")
+            log(f"Найдено {total_matches} тикеров (data-matches не доступен)")
 
-    status_callback(f"Общее количество тикеров: {total_matches}")
+    log(f"Общее количество тикеров: {total_matches}")
 
-    # Находим контейнер таблицы
     table_container = await page.query_selector('div[data-name="screener-table"]')
     if not table_container:
         table_container = await page.query_selector('.table-Ngq2xrcG')
@@ -731,28 +585,24 @@ async def scroll_table_to_bottom_fast(page, status_callback):
     current_count = 0
 
     while scroll_attempts < max_scroll_attempts:
-        # Получаем текущее количество элементов
         current_count = await page.evaluate('''() => {
             return document.querySelectorAll('.row-RdUXZpkv.listRow').length;
         }''')
 
-        status_callback(f"Текущее количество тикеров: {current_count}")
+        log(f"Текущее количество тикеров: {current_count}")
 
-        # Если достигли общего количества тикеров, ВЫХОДИМ НЕМЕДЛЕННО
         if total_matches > 0 and current_count >= total_matches:
-            status_callback(f"Достигнуто общее количество тикеров: {total_matches}")
-            return current_count  # Немедленно возвращаем результат
+            log(f"Достигнуто общее количество тикеров: {total_matches}")
+            return current_count
 
-        # Если количество не изменилось с последней проверки, увеличиваем счетчик попыток
         if current_count == last_count:
             scroll_attempts += 1
-            status_callback(f"Количество не изменилось. Попытка {scroll_attempts}/{max_scroll_attempts}")
+            log(f"Количество не изменилось. Попытка {scroll_attempts}/{max_scroll_attempts}")
         else:
-            scroll_attempts = 0  # Сбрасываем счетчик, если есть прогресс
+            scroll_attempts = 0
 
         last_count = current_count
 
-        # Прокручиваем к последнему элементу
         await page.evaluate('''() => {
             const rows = document.querySelectorAll('.row-RdUXZpkv.listRow');
             if (rows.length > 0) {
@@ -760,91 +610,165 @@ async def scroll_table_to_bottom_fast(page, status_callback):
             }
         }''')
 
-        # Увеличиваем время ожидания для надежности
         await page.wait_for_timeout(2000)
 
-        # Если достигли максимального количества попыток, выходим
         if scroll_attempts >= max_scroll_attempts:
-            status_callback("Достигнут лимит попыток прокрутки")
+            log("Достигнут лимит попыток прокрутки")
             break
 
-    status_callback(f"Завершение прокрутки. Итого тикеров: {current_count}")
+    log(f"Завершение прокрутки. Итого тикеров: {current_count}")
     return current_count
 
 
-async def apply_exchange_filters_fast(page, exchange_names, status_callback):
-    """Оптимизированное применение фильтров по биржам (после авторизации)"""
-    status_callback("Кликаем по кнопке 'Биржа'...")
-    await page.click('text=Биржа')
+# ===================== ОСНОВНОЙ ПАРСЕР =====================
 
-    # Ждем появления поле поиска
-    search_input = await page.wait_for_selector('input[placeholder="Поиск"]', timeout=5000)
+async def tradingview_parser(exchange_names, instrument_types, filename, log):
+    async with async_playwright() as p:
+        browser = None
+        context = None
+        page = None
+        launched = False
+        launched_proc = None
 
-    for exchange_name in exchange_names:
-        status_callback(f"Выбираем биржу: {exchange_name}")
+        fast_mode = not NEED_LOGIN_FIRST_TIME
 
-        # Очищаем поле поиска быстрым способом
-        await search_input.click(click_count=3)
-        await search_input.press('Backspace')
-
-        # Вводим название биржи с минимальной задержкой
-        await search_input.type(exchange_name, delay=50)
-
-        # Ждем появления результатов
-        await page.wait_for_timeout(500)
-
-        # Выбираем биржу из списка
         try:
-            await page.click(f'div.middle-LSK1huUA:has-text("{exchange_name}")', timeout=3000)
-            status_callback(f"Биржа {exchange_name} выбрана успешно")
+            # 1) attach (или автозапуск Chrome)
+            browser, context, launched, launched_proc = await _connect_or_launch_cdp(p, log)
+            page = await context.new_page()
+            page.set_default_timeout(SEL_TIMEOUT_MS_FAST if fast_mode else SEL_TIMEOUT_MS_SLOW)
+            page.set_default_navigation_timeout(NAV_TIMEOUT_MS_FAST if fast_mode else NAV_TIMEOUT_MS_SLOW)
+            try:
+                await page.bring_to_front()
+            except Exception:
+                pass
+
+            # 2) первый вход (если требуется)
+            await _ensure_login_if_needed(page, log, fast_mode)
+
+            # 3) идём в скринер
+            log("Открываю CEX-скринер...")
+            await page.goto(
+                "https://ru.tradingview.com/cex-screener/",
+                timeout=(NAV_TIMEOUT_MS_FAST if fast_mode else NAV_TIMEOUT_MS_SLOW),
+                wait_until="domcontentloaded"
+            )
+
+            # 4) Котируемая валюта → USDT
+            log("Выбираю 'Котируемая валюта / Quote currency'...")
+            if not await _click_text_any(page, ["Котируемая валюта", "Quote currency"], timeout=5000):
+                raise Exception("Не нашёл кнопку 'Котируемая валюта/Quote currency'")
+
+            await page.type('input[placeholder="Поиск"], input[placeholder="Search"]', 'USDT',
+                            delay=0 if fast_mode else 70)
+            await page.wait_for_timeout(FAST_WAIT_MS if fast_mode else 900)
+
+            try:
+                await page.click('div.middle-LSK1huUA:has-text("Tether USDt")', timeout=3000)
+            except Exception:
+                try:
+                    await page.click('div.middle-LSK1huUA:has-text("USDT")', timeout=2000)
+                except Exception as e:
+                    log(f"Не удалось выбрать USDT: {e}")
+
+            # 5) фильтры
+            await apply_exchange_filters_fast(page, exchange_names, log, fast_mode)
+            await apply_instrument_type_filters_fast(page, instrument_types, log, fast_mode)
+
+            # 6) проверка «Нет подходящих символов»
+            await page.wait_for_timeout(FAST_WAIT_MS if fast_mode else 1200)
+            await _fail_if_no_symbols(page, log, exchange_names, instrument_types)
+
+            # 7) ждём появления строк и скроллим до total_matches
+            await page.wait_for_selector(
+                '.row-RdUXZpkv.listRow',
+                timeout=(SEL_TIMEOUT_MS_FAST if fast_mode else SEL_TIMEOUT_MS_SLOW)
+            )
+
+            await scroll_table_to_bottom_fast(page, log, fast_mode)
+
+            # 8) парс тикеров
+            log("Парсю тикеры...")
+            tickers = await page.evaluate('''() => {
+                const out=[];
+                document.querySelectorAll('.row-RdUXZpkv.listRow').forEach(r=>{
+                    const el=r.querySelector('.tickerName-GrtoTeat');
+                    if(el) out.push(el.textContent);
+                });
+                return out;
+            }''')
+            log(f"Найдено {len(tickers)} тикеров")
+
+            os.makedirs(os.path.dirname(filename) or ".", exist_ok=True)
+            with open(filename, 'w', encoding='utf-8') as f:
+                for t in tickers:
+                    f.write(t + "\n")
+            log(f"Тикеры сохранены: {filename}")
+
+            # 9) Закрытие
+            try:
+                await page.close()
+            except Exception:
+                pass
+
+            # Если запускали Chrome сами — закрываем его
+            if launched:
+                log("Закрываю запущенный Chrome...")
+                try:
+                    await browser.close()
+                except Exception:
+                    pass
+                try:
+                    if launched_proc and launched_proc.poll() is None:
+                        if os.name == "nt":
+                            subprocess.run(["taskkill", "/F", "/T", "/PID", str(launched_proc.pid)],
+                                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        else:
+                            launched_proc.terminate()
+                except Exception:
+                    pass
+            else:
+                log("Chrome был уже запущен — оставляю как есть.")
+
+            log("Готово.")
+
         except Exception as e:
-            status_callback(f"Не удалось выбрать биржу {exchange_name}: {e}")
+            log(f"Ошибка: {e}")
+            try:
+                if page:
+                    await page.screenshot(path='error_screenshot.png')
+            except Exception:
+                pass
 
-        # Минимальная пауза перед следующей биржей
-        await page.wait_for_timeout(300)
+            # В случае ошибки тоже закрываем наш Chrome, если запускали
+            try:
+                if launched:
+                    try:
+                        await browser.close()
+                    except Exception:
+                        pass
+                    if launched_proc and launched_proc.poll() is None:
+                        if os.name == "nt":
+                            subprocess.run(["taskkill", "/F", "/T", "/PID", str(launched_proc.pid)],
+                                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        else:
+                            launched_proc.terminate()
+            except Exception:
+                pass
 
-    # Закрываем окно выбора бирж
-    await page.keyboard.press('Escape')
-    status_callback("Все биржи выбраны успешно!")
+            raise
 
 
-async def apply_instrument_type_filters_fast(page, instrument_types, status_callback):
-    """Оптимизированное применение фильтров по типам инструментов (после авторизации)"""
-    status_callback("Кликаем по кнопке 'Тип инструмента'...")
-    await page.click('text=Тип инструмента')
-
-    # Ждем появления меню
-    await page.wait_for_timeout(1000)
-
-    for instrument_type in instrument_types:
-        status_callback(f"Выбираем тип инструмента: {instrument_type}")
-
-        # Выбираем тип инструмента из списка
-        try:
-            await page.click(f'div.middle-LSK1huUA:has-text("{instrument_type}")', timeout=2000)
-            status_callback(f"Тип инструмента {instrument_type} выбран успешно")
-        except Exception as e:
-            status_callback(f"Не удалось выбрать тип инструмента {instrument_type}: {e}")
-
-        # Минимальная пауза перед следующим типом
-        await page.wait_for_timeout(200)
-
-    # Закрываем окно выбора типов инструментов
-    await page.keyboard.press('Escape')
-    status_callback("Все типы инструментов выбраны успешно!")
-
+# ===================== ENTRY =====================
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-
-    # Настройка asyncio для работы с Qt
     from qasync import QEventLoop
-
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
 
-    window = TradingViewParserGUI()
-    window.show()
+    win = TradingViewParserGUI()
+    win.show()
 
     with loop:
         sys.exit(loop.run_forever())

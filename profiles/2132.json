@@ -1,0 +1,896 @@
+[
+  {
+    "name": "NTX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "NWS",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "ORD",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "OSAK",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "PADD",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "PATEX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "PEAR",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "PGPT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "PHT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "PORTUMA",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "QDX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "QLINDO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "QTLX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "REDBIRD",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "REM",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "RET",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "RIZE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "RIZO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "ROG",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "RVF",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "SAC",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "SBX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "SCOTTY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "SECOND",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "SECU",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "SER",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "SERV",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "SFIN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "SKX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "KDX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "KFI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "KHAI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "KIBSHI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "KILT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "KOIN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "KPC",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "LAIKAL2",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "LBM",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "LDY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "LINKE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "LRT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "LUNCH",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "MAIV",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "MAZZE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "MBD",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "MEER",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "MMUI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "MOONED",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "MORRA",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "MSM",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "MUDOL2",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "MUNITY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "NAIT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "NCDT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "NDC",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "NEXM",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "NMKR",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "NTV",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "CWA",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "DEDA",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "DICE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "DREYAI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "EAI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "EDLC",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "EDWIN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "EFFECT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": true
+  },
+  {
+    "name": "ENF",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "EON",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "EPIKO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "EXS",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "FIT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "FMC",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "FNCY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "FNTIO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "FRC",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "FRT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "G8D",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "GAG",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "HYPERSKIDS",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "IAI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "ICT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "IMAGE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "INDY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "IUP",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "JLP",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "JUNE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "KDG",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "SPCFIN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "STUFF",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "SUIDEPIN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "SVM",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "TATSU",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "TBA",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "TFI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "TIX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "TKT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "TLF",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "TOM",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "TORSY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "TPRO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "TRUU",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "TUXC",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "UBSN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "VEX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "VOLTAGE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "WACME",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "WAGMI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "WEB3D",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "WELF",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "WINR",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "WSM",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "XGROK",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "XIN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "XLS",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "XOXNO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "YACHT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "AAST",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "AGRS",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "AIDEV",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "AIH",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "AMPED",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "ARENA",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "ARI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "ASSETMINT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "ASTRAAI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "ASTROS",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "AUKI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "AUR",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "AXOL",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "B1OAI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "BABYBONK",
+    "spot_exchanges": "",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "BACHI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "BATTERY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "BCAT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "BNRY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "BNY",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "BTSLR",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "BUL",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "BXX",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "C4E",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "CCDOG",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "CDT",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "CHANGE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "COLLE",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "CVN",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "YAPYO",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "ZAI",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "ZENQ",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  },
+  {
+    "name": "ZON",
+    "spot_exchanges": "MEXC",
+    "futures_exchanges": "",
+    "favorite": false
+  }
+]

@@ -2,6 +2,8 @@ import json
 import os
 from dataclasses import dataclass
 import shutil
+import threading          # <— добавили
+
 
 
 @dataclass
@@ -9,6 +11,7 @@ class Coin:
     name: str
     spot_exchanges: str
     futures_exchanges: str
+    favorite: bool = False  # <— добавили
 
 
 class Database:
@@ -18,7 +21,8 @@ class Database:
         self.profile_name = profile_name
         self.filename = f"{self.PROFILES_DIR}/{profile_name}.json"
         self.coins = []
-
+        self._save_timer = None  # <— добавили
+        self._save_lock = threading.Lock()
         # Создаем директорию профилей если нужно
         os.makedirs(self.PROFILES_DIR, exist_ok=True)
         self.load()
@@ -29,7 +33,12 @@ class Database:
             try:
                 with open(self.filename, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                    self.coins = [Coin(**item) for item in data]
+                    self.coins = [Coin(
+                        name=item.get('name', ''),
+                        spot_exchanges=item.get('spot_exchanges', ''),
+                        futures_exchanges=item.get('futures_exchanges', ''),
+                        favorite=item.get('favorite', False)  # <— дефолт
+                    ) for item in data]
             except (json.JSONDecodeError, FileNotFoundError):
                 self.coins = []
         else:
@@ -41,9 +50,38 @@ class Database:
             data = [{
                 'name': coin.name,
                 'spot_exchanges': coin.spot_exchanges,
-                'futures_exchanges': coin.futures_exchanges
+                'futures_exchanges': coin.futures_exchanges,
+                'favorite': getattr(coin, 'favorite', False)  # <— сохраняем
             } for coin in self.coins]
             json.dump(data, f, indent=2, ensure_ascii=False)
+
+    def _schedule_save(self, delay: float = 0.4):
+        """Поставить сохранение на таймер (дебаунс) — чтобы не блокировать UI на каждый чих."""
+
+        def _do_save():
+            with self._save_lock:
+                try:
+                    # атомарная запись через временный файл
+                    tmp = f"{self.filename}.tmp"
+                    data = [{
+                        'name': c.name,
+                        'spot_exchanges': c.spot_exchanges,
+                        'futures_exchanges': c.futures_exchanges,
+                        'favorite': getattr(c, 'favorite', False)
+                    } for c in self.coins]
+                    with open(tmp, 'w', encoding='utf-8') as f:
+                        json.dump(data, f, indent=2, ensure_ascii=False)
+                    os.replace(tmp, self.filename)  # атомарно
+                finally:
+                    # снимаем ссылку на таймер
+                    self._save_timer = None
+
+        # перезапускаем таймер, если уже был
+        if self._save_timer and self._save_timer.is_alive():
+            self._save_timer.cancel()
+        self._save_timer = threading.Timer(delay, _do_save)
+        self._save_timer.daemon = True
+        self._save_timer.start()
 
     def close(self):
         """Закрывает соединение с базой данных"""
@@ -68,7 +106,25 @@ class Database:
             self.coins.append(Coin(name, spot_exchanges, futures_exchanges))
 
         # Сохраняем изменения в файл
-        self.save()
+        self._schedule_save()
+
+    def set_favorite(self, name: str, value: bool):
+        """Установить/снять признак избранного у монеты и сохранить файл"""
+        for coin in self.coins:
+            if coin.name == name:
+                coin.favorite = bool(value)
+                self._schedule_save()
+                return True
+        return False
+
+    def delete_coin(self, name: str):
+        """Удалить монету из базы навсегда"""
+        before = len(self.coins)
+        self.coins = [c for c in self.coins if c.name != name]
+        if len(self.coins) != before:
+            self._schedule_save()
+            return True
+        return False
 
     def search_coins(self):
         """Возвращает все монеты из базы"""

@@ -1,0 +1,7 @@
+[
+  {
+    "name": "BTC",
+    "spot_exchanges": "Phemex, Binance.US, Gemini, CoinEx, Deepcoin, BingX, Bitazza, Bitso, WEEX, Bitunix, Bybit, Coinbase, PancakeSwap v2 (BNB chain), Pionex, LBank, Crypto.com, Delta Exchange, BitMart, MEXC, KCEX, Gate.io, HTX, Kraken, Bitfinex, Binance, CoinW, KuCoin, WhiteBIT, Deribit, Bitget, WOO X, UpBit, BloFin, Zoomex, Bitrue, Bitstamp, Toobit, BitMEX, OKX, Poloniex",
+    "futures_exchanges": "Phemex, Deepcoin, BingX, WEEX, Bitunix, OKX, Bybit, Pionex, LBank, Delta Exchange, BitMart, MEXC, KCEX, Gate.io, HTX, CoinW, Bitfinex, WhiteBIT, Bitget, WOO X, BloFin, Zoomex, Toobit, BitMEX, Binance"
+  }
+]

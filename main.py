@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys
 import os
 import json
@@ -8,12 +9,12 @@ import traceback
 import time
 from pathlib import Path
 from PyQt5.QtWidgets import *
-from PyQt5.QtWidgets import QCompleter, QTabWidget, QInputDialog, QSizePolicy
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QPoint, QPropertyAnimation, QEvent, QSize, QSettings, QEasingCurve, QTimer
+from PyQt5.QtWidgets import QCompleter, QTabWidget, QInputDialog, QSizePolicy, QGraphicsOpacityEffect
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QPoint, QPointF, QPropertyAnimation, QEvent, QSize, QSettings, QEasingCurve, QTimer
 from PyQt5.QtGui import (QIcon, QFont, QPalette, QColor, QStandardItemModel,
                          QStandardItem, QKeySequence, QPainter, QPixmap,
-                         QLinearGradient, QBrush, QPen)
-from database import Database, Coin
+                         QLinearGradient, QBrush, QPen, QPolygonF)
+from database_sqlite import Database, Coin
 from parser import TradingViewParser
 import multiprocessing
 from parser import parse_coin_in_process, parse_coins_batch_process
@@ -21,10 +22,19 @@ import io
 from clicker_window import ClickerWindow
 from datetime import datetime, timedelta
 import concurrent.futures
+import math
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+# --- безопасная обёртка stdout/stderr ---
+def _safe_rewrap_streams():
+    for name in ("stdout", "stderr"):
+        stream = getattr(sys, name, None)
+        if stream and hasattr(stream, "buffer"):
+            try:
+                setattr(sys, name, io.TextIOWrapper(stream.buffer, encoding="utf-8", errors="replace"))
+            except Exception:
+                pass
 
+_safe_rewrap_streams()
 
 # Глобальная обработка исключений
 def excepthook(exc_type, exc_value, exc_tb):
@@ -38,15 +48,11 @@ def excepthook(exc_type, exc_value, exc_tb):
     msg.setDetailedText(tb)
     msg.exec_()
 
-
-# Установка обработчика ошибок
 sys.excepthook = excepthook
 
 # Добавляем очистку потоков
 import cleanup_threads
-
 cleanup_threads.register_cleanup()
-
 
 # Настройка окружения для Playwright
 def setup_playwright():
@@ -60,15 +66,23 @@ def setup_playwright():
         if not browsers_path.exists():
             print("Установка браузеров Playwright...")
             try:
+                creationflags = 0
+                if os.name == "nt":
+                    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
                 subprocess.run(
                     [sys.executable, "-m", "playwright", "install", "chromium"],
                     check=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    creationflags=subprocess.CREATE_NO_WINDOW
+                    creationflags=creationflags
                 )
             except subprocess.CalledProcessError as e:
-                print(f"Ошибка установки браузеров: {e.stderr.decode()}")
+                try:
+                    err = e.stderr.decode(errors='ignore')
+                except Exception:
+                    err = str(e)
+                print(f"Ошибка установки браузеров: {err}")
                 return False
             except Exception as e:
                 print(f"Неизвестная ошибка при установке браузеров: {str(e)}")
@@ -88,10 +102,14 @@ class CopyNotification(QLabel):
             padding: 2px 6px;
             font-weight: bold;
             font-size: 10px;
-            opacity: 0;
         """)
         self.setFixedHeight(20)
-        self.animation = QPropertyAnimation(self, b"opacity")
+
+        # ВАЖНО: анимируем opacity через эффект
+        self._opacity_effect = QGraphicsOpacityEffect(self)
+        self.setGraphicsEffect(self._opacity_effect)
+
+        self.animation = QPropertyAnimation(self._opacity_effect, b"opacity")
         self.animation.setDuration(1000)
         self.animation.setEasingCurve(QEasingCurve.OutCubic)
         self.animation.setStartValue(0.0)
@@ -109,11 +127,10 @@ class CopyNotification(QLabel):
         self.raise_()
         self.animation.start()
 
-    def show_notification(self, button):
+    def show_notification_at_pos(self, pos):
         self.setText("✓ Скопировано")
-        global_pos = button.mapToGlobal(QPoint(0, 0))
-        parent_pos = self.parent().mapFromGlobal(global_pos)
-        self.move(parent_pos.x() - 15, parent_pos.y() + button.height() + 5)
+        local_pos = self.parent().mapFromGlobal(pos)
+        self.move(local_pos.x() - 15, local_pos.y() - 25)
         self.show()
         self.raise_()
         self.animation.start()
@@ -125,7 +142,6 @@ class ExchangeFilterWidget(QWidget):
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
 
-        # Текстовое поле для отображения выбранных бирж
         self.label = QLabel("Все биржи")
         self.label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.label.setStyleSheet("""
@@ -143,7 +159,6 @@ class ExchangeFilterWidget(QWidget):
         self.label.mousePressEvent = self.show_dialog
         self.layout.addWidget(self.label)
 
-        # Диалог выбора бирж
         self.dialog = QDialog(self)
         self.dialog.setWindowTitle("Выберите биржи")
         self.dialog.setFixedSize(320, 400)
@@ -186,13 +201,11 @@ class ExchangeFilterWidget(QWidget):
         self.dialog_layout.setContentsMargins(12, 12, 12, 12)
         self.dialog_layout.setSpacing(12)
 
-        # Поле поиска
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Поиск бирж...")
         self.search_input.setStyleSheet("font-size: 13px;")
         self.dialog_layout.addWidget(self.search_input)
 
-        # Список бирж с чекбоксами
         self.list_widget = QListWidget()
         self.list_widget.setStyleSheet("""
             QListWidget {
@@ -208,10 +221,9 @@ class ExchangeFilterWidget(QWidget):
                 background-color: #4A4A4A;
             }
         """)
-        self.list_widget.itemClicked.connect(self.toggle_item_check)
+        # не инвертируем вручную чекбоксы — Qt сам всё сделает
         self.dialog_layout.addWidget(self.list_widget, 1)
 
-        # Кнопки управления
         btn_layout = QHBoxLayout()
         self.select_all_btn = QPushButton("Выбрать все")
         self.select_all_btn.clicked.connect(self.select_all)
@@ -221,7 +233,6 @@ class ExchangeFilterWidget(QWidget):
         btn_layout.addWidget(self.deselect_all_btn)
         self.dialog_layout.addLayout(btn_layout)
 
-        # Кнопки подтверждения
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.setStyleSheet("background-color: transparent;")
         button_box.accepted.connect(self.accept_selection)
@@ -231,12 +242,6 @@ class ExchangeFilterWidget(QWidget):
         self.search_input.textChanged.connect(self.filter_items)
         self.selected_exchanges = set()
         self.all_exchanges = []
-
-    def toggle_item_check(self, item):
-        if item.checkState() == Qt.Checked:
-            item.setCheckState(Qt.Unchecked)
-        else:
-            item.setCheckState(Qt.Checked)
 
     def set_exchanges(self, exchanges):
         self.all_exchanges = sorted(exchanges)
@@ -273,7 +278,6 @@ class ExchangeFilterWidget(QWidget):
                 item.setCheckState(Qt.Checked)
             else:
                 item.setCheckState(Qt.Unchecked)
-
         self.search_input.clear()
         self.filter_items("")
         self.dialog.exec_()
@@ -306,7 +310,6 @@ class ExchangeFilterWidget(QWidget):
                 font-size: 12px;
             }
         """)
-
         if self.selected_exchanges:
             self.label.setToolTip(", ".join(sorted(self.selected_exchanges)))
 
@@ -326,10 +329,8 @@ class ParseThread(QThread):
 
     def run(self):
         try:
-            # Создаем парсер с уникальным ID
             self.parser = TradingViewParser(headless=True, instance_id=self.thread_id)
             data_tuple = self.parser.parse_coin(self.coin_name)
-            # Извлекаем только результат из tuple (coin_name, result)
             data = data_tuple[1] if isinstance(data_tuple, tuple) and len(data_tuple) == 2 else data_tuple
             self.finished.emit(data)
         except Exception as e:
@@ -352,43 +353,41 @@ class BatchParseThread(QThread):
         self._is_cancelled = False
         self.start_time = None
         self.max_workers = max_workers
+        self._executor = None
+        self._futures = []
 
     def cancel(self):
         self._is_cancelled = True
+        try:
+            if self._executor:
+                self._executor.shutdown(cancel_futures=True)
+        except Exception:
+            pass
 
     def run(self):
         total = len(self.coin_names)
         self.start_time = time.time()
 
-        # Разбиваем монеты на батчи для каждого воркера
         chunk_size = max(1, len(self.coin_names) // self.max_workers)
         chunks = [self.coin_names[i:i + chunk_size] for i in range(0, len(self.coin_names), chunk_size)]
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=self.max_workers) as executor:
-            # Запускаем процессы для обработки каждого батча
-            future_to_chunk = {
-                executor.submit(parse_coins_batch_process, chunk, True): chunk
-                for chunk in chunks
-            }
+        ctx = multiprocessing.get_context('spawn')
+        with concurrent.futures.ProcessPoolExecutor(max_workers=self.max_workers, mp_context=ctx) as executor:
+            self._executor = executor
+            self._futures = [executor.submit(parse_coins_batch_process, chunk, True) for chunk in chunks]
 
             processed = 0
-            for future in concurrent.futures.as_completed(future_to_chunk):
+            for future in concurrent.futures.as_completed(self._futures):
                 if self._is_cancelled:
                     break
-
-                chunk = future_to_chunk[future]
+                chunk = None
                 try:
                     chunk_results = future.result()
-
                     for coin_name, result in chunk_results.items():
                         processed += 1
-
-                        # Расчет оставшегося времени
                         elapsed = time.time() - self.start_time
-                        time_per_coin = elapsed / processed
-                        remaining_seconds = time_per_coin * (total - processed)
-
-                        # Форматирование времени в ЧЧ:ММ:СС
+                        time_per_coin = elapsed / max(processed, 1)
+                        remaining_seconds = max(0, time_per_coin * (total - processed))
                         hours = int(remaining_seconds // 3600)
                         minutes = int((remaining_seconds % 3600) // 60)
                         seconds = int(remaining_seconds % 60)
@@ -402,117 +401,49 @@ class BatchParseThread(QThread):
                             self.db.save_coin(result['name'], spot_str, futures_str)
 
                         self.progress.emit(processed, total, coin_name, remaining_time)
-
                 except Exception as e:
-                    # Если весь батч упал с ошибкой
-                    for coin_name in chunk:
+                    # Если батч упал — считаем, что все его монеты с ошибкой
+                    if chunk is None:
+                        # без точного chunk — просто продвинем счётчик
                         processed += 1
-                        self.error.emit(str(e), coin_name)
-                        self.progress.emit(processed, total, coin_name, "Ошибка батча")
+                        self.progress.emit(processed, total, "?", "Ошибка батча")
+                    self.error.emit(str(e), "batch")
 
         self.finished.emit()
-
-
-# Добавьте методы для очистки памяти в класс ProfileTab
-def start_memory_cleanup(self):
-    """Запускает периодическую очистку памяти"""
-    self.cleanup_timer = QTimer(self)
-    self.cleanup_timer.timeout.connect(self.memory_cleanup)
-    self.cleanup_timer.start(30000)  # Каждые 30 секунд
-
-
-def stop_memory_cleanup(self):
-    """Останавливает очистку памяти"""
-    if hasattr(self, 'cleanup_timer'):
-        self.cleanup_timer.stop()
-        self.cleanup_timer.deleteLater()
-
-
-def memory_cleanup(self):
-    """Очистка памяти во время пакетной обработки"""
-    if hasattr(self, 'batch_thread') and self.batch_thread.isRunning():
-        # Принудительный сбор мусора
-        import gc
-        gc.collect()
-
-
-# Обновите метод load_file в классе ProfileTab
-def load_file(self):
-    file_path, _ = QFileDialog.getOpenFileName(
-        self, "Выберите файл с монетами", "", "Text Files (*.txt);;All Files (*)"
-    )
-    if not file_path:
-        return
-
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            coin_names = f.readlines()
-        coin_names = [name.strip().upper() for name in coin_names if name.strip()]
-        if not coin_names:
-            QMessageBox.warning(self, "Ошибка", "Файл пуст")
-            return
-
-        self.scan_btn.setEnabled(False)
-        self.load_file_btn.setEnabled(False)
-        self.progress_bar.setVisible(False)
-        self.batch_progress_bar.setVisible(True)
-        self.batch_progress_bar.setRange(0, len(coin_names))
-        self.batch_progress_bar.setValue(0)
-        self.batch_progress_bar.setFormat("Подготовка к сканированию...")
-        self.cancel_btn.setVisible(True)
-
-        # Определяем оптимальное количество процессов
-        coin_count = len(coin_names)
-        max_workers = min(8, max(2, coin_count // 10))  # 1 воркер на каждые 10 монет, но не более 8
-
-        # Создаем уникальный ID для этого потока пакетного сканирования
-        thread_id = f"batch_{int(time.time())}_{id(self)}"
-        self.batch_thread = BatchParseThread(coin_names, self.db, thread_id, max_workers)
-        self.batch_thread.progress.connect(self.on_batch_progress)
-        self.batch_thread.finished.connect(self.on_batch_finished)
-        self.batch_thread.error.connect(self.on_batch_error)
-        self.batch_thread.start()
-
-        # Запускаем очистку памяти во время пакетной обработки
-        self.start_memory_cleanup()
-
-    except Exception as e:
-        QMessageBox.critical(self, "Ошибка", f"Не удалось загрузить файл: {str(e)}")
-        self.scan_btn.setEnabled(True)
-        self.load_file_btn.setEnabled(True)
-        self.stop_memory_cleanup()
 
 
 class ProfileTab(QWidget):
     def __init__(self, profile_name, parent=None):
         super().__init__(parent)
         self.profile_name = profile_name
-        self.db = None  # Явно инициализируем как None
+        self.db = None
         self.copy_notification = CopyNotification(self)
         self.copy_notification.hide()
+        self.filtered_results = []
 
         try:
             self.db = Database(profile_name)
         except Exception as e:
             QMessageBox.warning(self, "Ошибка", f"Не удалось загрузить базу данных: {str(e)}")
-            # Создаем новую базу данных при ошибке
             self.db = Database(profile_name)
-            self.db.save()  # Создаем пустой файл
+            self.db.save()
 
         self.init_ui()
         self.apply_theme()
+        self._build_star_icons_from_outline()  # подготовим иконки звезды (контур + заливка)
+        self._load_metascalp_icons()
         self.update_exchange_list()
         self.reset_filters()
 
     def closeEvent(self, event):
-        if hasattr(self, 'scan_thread') and self.scan_thread.isRunning():
+        if hasattr(self, 'scan_thread') and getattr(self.scan_thread, 'isRunning', lambda: False)():
             try:
                 self.scan_thread.terminate()
                 self.scan_thread.wait(1000)
             except:
                 pass
 
-        if hasattr(self, 'batch_thread') and self.batch_thread.isRunning():
+        if hasattr(self, 'batch_thread') and getattr(self.batch_thread, 'isRunning', lambda: False)():
             try:
                 self.batch_thread.cancel()
                 self.batch_thread.terminate()
@@ -524,30 +455,25 @@ class ProfileTab(QWidget):
         event.accept()
 
     def start_memory_cleanup(self):
-        """Запускает периодическую очистку памяти"""
         self.cleanup_timer = QTimer()
         self.cleanup_timer.timeout.connect(self.memory_cleanup)
-        self.cleanup_timer.start(30000)  # Каждые 30 секунд
+        self.cleanup_timer.start(30000)
 
     def stop_memory_cleanup(self):
-        """Останавливает очистку памяти"""
         if hasattr(self, 'cleanup_timer'):
             self.cleanup_timer.stop()
             self.cleanup_timer.deleteLater()
 
     def memory_cleanup(self):
-        """Очистка памяти во время пакетной обработки"""
-        if hasattr(self, 'batch_thread') and self.batch_thread.isRunning():
-            # Принудительный сбор мусора
+        if hasattr(self, 'batch_thread') and getattr(self.batch_thread, 'isRunning', lambda: False)():
             import gc
             gc.collect()
-
-            # Также пытаемся освободить неиспользуемую память
-            try:
-                import ctypes
-                ctypes.CDLL('libc.so.6').malloc_trim(0)
-            except:
-                pass  # Не критично, если не сработает
+            if sys.platform.startswith("linux"):
+                try:
+                    import ctypes
+                    ctypes.CDLL('libc.so.6').malloc_trim(0)
+                except:
+                    pass
 
     def apply_theme(self):
         self.setStyleSheet("""
@@ -648,17 +574,14 @@ class ProfileTab(QWidget):
         """)
 
     def init_ui(self):
-        # Основной layout
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(15, 15, 15, 15)
         main_layout.setSpacing(15)
 
-        # Группа сканирования
         scan_group = QGroupBox("Сканирование монеты")
         scan_layout = QVBoxLayout(scan_group)
         scan_layout.setSpacing(15)
 
-        # Верхняя строка с полем ввода и кнопками
         input_layout = QHBoxLayout()
         input_layout.setSpacing(10)
 
@@ -678,7 +601,6 @@ class ProfileTab(QWidget):
         input_layout.addWidget(self.load_file_btn, 2)
         scan_layout.addLayout(input_layout)
 
-        # Прогресс-бары
         self.progress_bar = QProgressBar()
         self.progress_bar.setVisible(False)
         self.progress_bar.setRange(0, 0)
@@ -696,22 +618,30 @@ class ProfileTab(QWidget):
         self.cancel_btn.clicked.connect(self.cancel_batch_scan)
         scan_layout.addWidget(self.cancel_btn)
 
-        # Результаты сканирования
         results_layout = QVBoxLayout()
         results_layout.setSpacing(8)
 
-        # Название монеты с кнопкой копирования
         name_layout = QHBoxLayout()
         name_layout.setContentsMargins(0, 0, 0, 0)
-        name_layout.setSpacing(5)  # Уменьшаем отступ между элементами
+        name_layout.setSpacing(6)
 
         self.coin_name_label = QLabel("Название:")
         self.coin_name_label.setFont(QFont("Arial", 11, QFont.Bold))
         self.coin_name_value = QLabel("")
         self.coin_name_value.setFont(QFont("Arial", 11, QFont.Bold))
-        self.coin_name_value.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)  # Не растягивать по горизонтали
+        self.coin_name_value.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
 
-        # Используем иконку для кнопки копирования
+        # ⭐ одиночное сканирование — звезда
+        self.single_star_btn = QPushButton()
+        self.single_star_btn.setCheckable(True)
+        self.single_star_btn.setVisible(False)
+        self.single_star_btn.setFixedSize(24, 24)
+        self.single_star_btn.setStyleSheet("""
+            QPushButton { background-color: transparent; border: none; padding: 0px; margin: 0px; }
+        """)
+        self.single_star_btn.clicked.connect(self.toggle_favorite_single)
+
+        # Копировать тикер
         self.copy_btn = QPushButton()
         self.copy_btn.setFixedSize(28, 28)
         self.copy_btn.setStyleSheet("""
@@ -731,17 +661,28 @@ class ProfileTab(QWidget):
             self.copy_btn.setText("C")
         self.copy_btn.setToolTip("Копировать название")
         self.copy_btn.clicked.connect(lambda: self.copy_coin_name(self.copy_btn))
-        self.copy_btn.setVisible(False)  # Скрываем кнопку до сканирования
+        self.copy_btn.setVisible(False)
 
+        # MetaScalp allow/deny — ПЛОСКИЕ иконки без фона
+        self.metascalp_btn = QPushButton()
+        self.metascalp_btn.setCheckable(True)
+        self.metascalp_btn.setVisible(False)
+        self.metascalp_btn.setFixedSize(24, 24)
+        self.metascalp_btn.clicked.connect(self._toggle_metascalp)
+        self._load_metascalp_icons()
+        self._apply_metascalp_icon(self.metascalp_btn, True)
+
+        # композиция
         name_layout.addWidget(self.coin_name_label)
         name_layout.addWidget(self.coin_name_value)
-        name_layout.addSpacing(5)  # Добавляем небольшой отступ
-        name_layout.addWidget(self.copy_btn)
-        name_layout.addStretch()  # Добавляем растягивающий элемент
+        name_layout.addSpacing(6)
+        name_layout.addWidget(self.single_star_btn)   # ⭐ слева от копирования
+        name_layout.addWidget(self.copy_btn)          # копировать
+        name_layout.addWidget(self.metascalp_btn)     # справа — metascalp
+        name_layout.addStretch()
 
         results_layout.addLayout(name_layout)
 
-        # Спотовые биржи
         spot_layout = QHBoxLayout()
         spot_label = QLabel("Спотовые биржи:")
         spot_label.setFont(QFont("Arial", 10))
@@ -752,7 +693,6 @@ class ProfileTab(QWidget):
         spot_layout.addWidget(self.spot_value, 1)
         results_layout.addLayout(spot_layout)
 
-        # Фьючерсные биржи
         futures_layout = QHBoxLayout()
         futures_label = QLabel("Фьючерсные биржи:")
         futures_label.setFont(QFont("Arial", 10))
@@ -765,19 +705,16 @@ class ProfileTab(QWidget):
         scan_layout.addLayout(results_layout)
         main_layout.addWidget(scan_group)
 
-        # Группа поиска
         search_group = QGroupBox("Поиск по базе данных")
         search_layout = QVBoxLayout(search_group)
         search_layout.setSpacing(15)
 
-        # Фильтры
         filter_layout = QGridLayout()
         filter_layout.setColumnStretch(1, 1)
         filter_layout.setColumnStretch(3, 1)
         filter_layout.setHorizontalSpacing(10)
         filter_layout.setVerticalSpacing(10)
 
-        # Поиск по названию
         filter_layout.addWidget(QLabel("Поиск по названию:"), 0, 0)
         self.coin_search_input = QLineEdit()
         self.coin_search_input.setPlaceholderText("Введите название монеты")
@@ -785,12 +722,10 @@ class ProfileTab(QWidget):
         self.coin_search_input.returnPressed.connect(self.apply_filter)
         filter_layout.addWidget(self.coin_search_input, 0, 1, 1, 4)
 
-        # Фильтр по биржам
         filter_layout.addWidget(QLabel("Выберите биржи:"), 1, 0)
         self.exchange_filter = ExchangeFilterWidget()
         filter_layout.addWidget(self.exchange_filter, 1, 1, 1, 4)
 
-        # Дополнительные фильтры
         filter_layout.addWidget(QLabel("Тип торговли:"), 2, 0)
         self.trade_type = QComboBox()
         self.trade_type.addItems(["Все", "Только спот", "Только фьючерсы"])
@@ -799,9 +734,12 @@ class ProfileTab(QWidget):
 
         self.exclusive_check = QCheckBox("Только на выбранных биржах")
         self.exclusive_check.setToolTip("Показывать только монеты, которые есть ТОЛЬКО на выбранных биржах")
-        filter_layout.addWidget(self.exclusive_check, 2, 2, 1, 2)
+        filter_layout.addWidget(self.exclusive_check, 2, 2, 1, 1)
 
-        # Кнопки управления
+        self.favorites_only_check = QCheckBox("Только избранное")
+        self.favorites_only_check.setToolTip("Показывать только тикеры из избранного")
+        filter_layout.addWidget(self.favorites_only_check, 2, 3, 1, 1)
+
         search_btn = QPushButton("Найти")
         search_btn.setMinimumHeight(36)
         search_btn.clicked.connect(self.apply_filter)
@@ -814,18 +752,24 @@ class ProfileTab(QWidget):
 
         search_layout.addLayout(filter_layout)
 
-        # Таблица результатов
-        self.table = QTableWidget(0, 3)
-        self.table.setHorizontalHeaderLabels(["Монета", "Спотовые биржи", "Фьючерсные биржи"])
+        self.export_btn = QPushButton("Экспорт отфильтрованных тикеров")
+        self.export_btn.setMinimumHeight(36)
+        self.export_btn.clicked.connect(self.export_filtered_tickers)
+        search_layout.addWidget(self.export_btn)
+
+        self.table = QTableWidget(0, 4)
+        self.table.setHorizontalHeaderLabels(["Монета", "Спотовые биржи", "Фьючерсные биржи", "sortKey"])
+        self.table.setColumnHidden(3, True)
+        self.table.setSortingEnabled(True)
+        self.table.sortItems(3, Qt.AscendingOrder)
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
         self.table.setMinimumHeight(400)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)  # мультивыбор
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
-
-        # Фиксируем заголовки при скролле
         self.table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.table.verticalHeader().setDefaultSectionSize(40)
         self.table.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
@@ -833,6 +777,46 @@ class ProfileTab(QWidget):
 
         search_layout.addWidget(self.table, 1)
         main_layout.addWidget(search_group, 1)
+
+    # --- metascalp icons ---
+    def _ensure_metascalp_icons(self):
+        """Гарантированно создаёт self._icon_allowed/_icon_deny один раз."""
+        if not hasattr(self, "_icon_allowed"):
+            self._icon_allowed = QIcon("icons/allowed.png") if os.path.exists("icons/allowed.png") else None
+            self._icon_deny = QIcon("icons/deny.png") if os.path.exists("icons/deny.png") else None
+
+    def _load_metascalp_icons(self):
+        """Старый метод остаётся для совместимости, но теперь сначала ensure."""
+        self._ensure_metascalp_icons()
+        if hasattr(self, "metascalp_btn"):
+            self._apply_metascalp_icon(self.metascalp_btn, True)
+
+    def _apply_metascalp_icon(self, btn: QPushButton, allowed: bool):
+        # ▼ добавили защиту: если иконки ещё не созданы — создаём
+        self._ensure_metascalp_icons()
+
+        btn.setProperty("metascalp_allowed", allowed)
+        btn.setStyleSheet("QPushButton { background: transparent; border: none; padding: 0; }")
+        if allowed:
+            if self._icon_allowed:
+                btn.setIcon(self._icon_allowed)
+                btn.setText("")
+            else:
+                btn.setText("A")
+        else:
+            if self._icon_deny:
+                btn.setIcon(self._icon_deny)
+                btn.setText("")
+            else:
+                btn.setText("X")
+        btn.setIconSize(QSize(18, 18))
+
+    def _toggle_metascalp(self, *_):
+        btn = self.sender()
+        if not isinstance(btn, QPushButton):
+            return
+        state = bool(btn.property("metascalp_allowed"))
+        self._apply_metascalp_icon(btn, not state)
 
     def update_exchange_list(self):
         exchanges = self.get_unique_exchanges()
@@ -855,7 +839,6 @@ class ProfileTab(QWidget):
 
     def start_scan(self):
         try:
-            # Сбрасываем предыдущий парсер, если он есть (для исправления бага с повторным запуском)
             if hasattr(self, 'scan_thread') and hasattr(self.scan_thread, 'parser'):
                 try:
                     self.scan_thread.parser.reset()
@@ -866,12 +849,13 @@ class ProfileTab(QWidget):
             if not coin_name:
                 QMessageBox.warning(self, "Ошибка", "Введите название монеты")
                 return
-            if not re.match(r"^[A-Z0-9]{2,10}$", coin_name):
+            if not re.match(r"^[A-Z0-9.]{2,15}$", coin_name):
                 QMessageBox.warning(self, "Ошибка", "Некорректное название монеты")
                 return
 
-            # Скрываем кнопку копирования перед началом сканирования
+            self.single_star_btn.setVisible(False)
             self.copy_btn.setVisible(False)
+            self.metascalp_btn.setVisible(False)
 
             self.scan_btn.setEnabled(False)
             self.load_file_btn.setEnabled(False)
@@ -881,7 +865,6 @@ class ProfileTab(QWidget):
             self.progress_bar.setVisible(True)
             self.batch_progress_bar.setVisible(False)
 
-            # Создаем уникальный ID для этого потока сканирования
             thread_id = f"scan_{int(time.time())}_{id(self)}"
             self.scan_thread = ParseThread(coin_name, thread_id)
             self.scan_thread.finished.connect(self.on_scan_finished)
@@ -895,7 +878,6 @@ class ProfileTab(QWidget):
             QMessageBox.critical(self, "Ошибка", f"Непредвиденная ошибка: {str(e)}")
 
     def load_file(self):
-        # Сбрасываем предыдущий парсер, если он есть (для исправления бага с повторным запуском)
         if hasattr(self, 'batch_thread') and hasattr(self.batch_thread, 'parser'):
             try:
                 self.batch_thread.parser.reset()
@@ -924,14 +906,12 @@ class ProfileTab(QWidget):
             self.batch_progress_bar.setVisible(True)
             self.batch_progress_bar.setRange(0, len(coin_names))
             self.batch_progress_bar.setValue(0)
-            self.batch_progress_bar.setFormat("Подготовка к сканированию...")
+            self.batch_progress_bar.setFormat("Подготовка к сканирование...")
             self.cancel_btn.setVisible(True)
 
-            # Определяем оптимальное количество процессов
             coin_count = len(coin_names)
-            max_workers = min(5, max(2, coin_count // 20))  # 1 воркер на каждые 20 монет, но не более 5
+            max_workers = min(5, max(2, coin_count // 20))
 
-            # Создаем уникальный ID для этого потока пакетного сканирования
             thread_id = f"batch_{int(time.time())}_{id(self)}"
             self.batch_thread = BatchParseThread(coin_names, self.db, thread_id, max_workers)
             self.batch_thread.progress.connect(self.on_batch_progress)
@@ -939,7 +919,6 @@ class ProfileTab(QWidget):
             self.batch_thread.error.connect(self.on_batch_error)
             self.batch_thread.start()
 
-            # Запускаем очистку памяти во время пакетной обработки
             self.start_memory_cleanup()
 
             self.coin_input.setText(original_text)
@@ -959,27 +938,35 @@ class ProfileTab(QWidget):
             self.spot_value.setText(", ".join(data['spot']) if data['spot'] else "Нет данных")
             self.futures_value.setText(", ".join(data['futures']) if data['futures'] else "Нет данных")
 
-            # Показываем кнопку копирования только после успешного сканирования
+            # делаем служебные кнопки видимыми
             self.copy_btn.setVisible(True)
+            self.metascalp_btn.setVisible(True)
+            self.single_star_btn.setVisible(True)
 
             spot_str = ", ".join(data['spot'])
             futures_str = ", ".join(data['futures'])
 
-            # Проверяем, что база данных инициализирована
+            # сохраняем в БД и подтягиваем признак избранного
             if hasattr(self, 'db') and self.db is not None:
                 self.db.save_coin(data['name'], spot_str, futures_str)
-                self.db.reload_from_file()
+                # прочитаем favorite для этой монеты
+                fav = False
+                for c in self.db.search_coins():
+                    if c.name == data['name']:
+                        fav = bool(c.favorite)
+                        break
+                # синхронизируем кнопку⭐
+                self.single_star_btn.blockSignals(True)
+                self.single_star_btn.setChecked(fav)
+                self.single_star_btn.setIcon(self._star_icon_yellow if fav else self._star_icon_grey)
+                self.single_star_btn.blockSignals(False)
+
                 self.update_exchange_list()
-
-                # НЕМЕДЛЕННО обновляем таблицу с новыми данными
                 self.reset_filters()
-
                 QMessageBox.information(self, "Успех", "Данные сохранены в базу данных!")
             else:
-                # Переинициализируем базу данных при необходимости
                 self.db = Database(self.profile_name)
                 self.db.save_coin(data['name'], spot_str, futures_str)
-                self.db.reload_from_file()
                 self.update_exchange_list()
                 self.reset_filters()
                 QMessageBox.warning(self, "Внимание", "База данных была переинициализирована")
@@ -994,8 +981,9 @@ class ProfileTab(QWidget):
         self.progress_bar.setVisible(False)
         self.scan_btn.setEnabled(True)
         self.load_file_btn.setEnabled(True)
-        # Скрываем кнопку копирования при ошибке
         self.copy_btn.setVisible(False)
+        self.metascalp_btn.setVisible(False)
+        self.single_star_btn.setVisible(False)
         QMessageBox.critical(self, "Ошибка сканирования", error_msg)
 
     def on_batch_progress(self, current, total, coin_name, remaining_time):
@@ -1009,7 +997,6 @@ class ProfileTab(QWidget):
         self.batch_progress_bar.setFormat("")
         self.cancel_btn.setVisible(False)
 
-        # Останавливаем очистку памяти
         self.stop_memory_cleanup()
 
         self.db.reload_from_file()
@@ -1028,16 +1015,15 @@ class ProfileTab(QWidget):
             self.batch_thread.wait(1000)
             self.on_batch_finished()
             self.batch_progress_bar.setFormat("")
-            # Останавливаем очистку памяти при отмене
             self.stop_memory_cleanup()
 
     def apply_filter(self):
         coin_name = self.coin_search_input.text().strip().upper()
         trade_type_text = self.trade_type.currentText()
         exclusive_mode = self.exclusive_check.isChecked()
+        favorites_only = getattr(self, 'favorites_only_check', None) and self.favorites_only_check.isChecked()
 
         selected_exchanges = self.exchange_filter.get_selected_items()
-
         if not selected_exchanges:
             selected_exchanges = self.get_unique_exchanges()
 
@@ -1056,11 +1042,11 @@ class ProfileTab(QWidget):
 
             coin_spot_exchanges = []
             if coin.spot_exchanges:
-                coin_spot_exchanges = [e.strip() for e in coin.spot_exchanges.split(',')]
+                coin_spot_exchanges = [e.strip() for e in coin.spot_exchanges.split(',') if e.strip()]
 
             coin_futures_exchanges = []
             if coin.futures_exchanges:
-                coin_futures_exchanges = [e.strip() for e in coin.futures_exchanges.split(',')]
+                coin_futures_exchanges = [e.strip() for e in coin.futures_exchanges.split(',') if e.strip()]
 
             all_coin_exchanges = set(coin_spot_exchanges + coin_futures_exchanges)
 
@@ -1079,16 +1065,12 @@ class ProfileTab(QWidget):
                         if exchange not in coin_futures_exchanges:
                             found_on_all = False
                             break
-
                 if not found_on_all:
                     continue
-
                 if not all_coin_exchanges.issubset(set(selected_exchanges)):
                     continue
-
             else:
                 found = False
-
                 for exchange in selected_exchanges:
                     if trade_type == "all":
                         if exchange in coin_spot_exchanges or exchange in coin_futures_exchanges:
@@ -1102,37 +1084,63 @@ class ProfileTab(QWidget):
                         if exchange in coin_futures_exchanges:
                             found = True
                             break
-
                 if not found:
                     continue
 
-            if trade_type == "spot":
-                if not coin_spot_exchanges or coin_futures_exchanges:
-                    continue
-            elif trade_type == "futures":
-                if not coin_futures_exchanges or coin_spot_exchanges:
-                    continue
+            if trade_type == "spot" and not coin_spot_exchanges:
+                continue
+            if trade_type == "futures" and not coin_futures_exchanges:
+                continue
+
+            if favorites_only and not getattr(coin, 'favorite', False):
+                continue
 
             filtered_results.append(coin)
 
-        filtered_results.sort(key=lambda x: x.name)
+        # Избранные вверх, затем по имени
+        filtered_results.sort(key=lambda c: (not getattr(c, 'favorite', False), c.name))
+        self.filtered_results = filtered_results
 
-        self.table.setRowCount(len(filtered_results))
-        for row_idx, coin in enumerate(filtered_results):
-            # Создаем виджет для ячейки с названием монеты и кнопкой копирования
-            coin_widget = QWidget()
-            coin_layout = QHBoxLayout(coin_widget)
-            coin_layout.setContentsMargins(8, 0, 8, 0)
-            coin_layout.setSpacing(5)  # Увеличиваем отступ между элементами
+        # Быстрый рефреш таблицы (без мерцаний)
+        self.table.setUpdatesEnabled(False)
+        self.table.setSortingEnabled(False)
+        try:
+            self.table.clearContents()
+            self.table.setRowCount(len(filtered_results))
+            for row_idx, coin in enumerate(filtered_results):
+                coin_widget = QWidget()
+                coin_layout = QHBoxLayout(coin_widget)
+                coin_layout.setContentsMargins(8, 0, 8, 0)
+                coin_layout.setSpacing(6)
 
-            # Название монеты
-            coin_label = QLabel(coin.name)
-            coin_label.setFont(QFont("Arial", 10, QFont.Bold))
-            coin_label.setStyleSheet("background-color: transparent;")
-            coin_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
+                # Кнопка-звезда слева
+                star_btn = QPushButton()
+                star_btn.setCheckable(True)
+                star_btn.setChecked(getattr(coin, 'favorite', False))
+                star_btn.setFixedSize(24, 24)
+                star_btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: transparent;
+                        border: none;
+                        padding: 0px;
+                        margin: 0px;
+                    }
+                """)
+                star_btn.setIcon(self._star_icon_yellow if star_btn.isChecked() else self._star_icon_grey)
+                star_btn.setIconSize(QSize(18, 18))
 
-            # Кнопка копирования (только если есть название монеты)
-            if coin.name:
+                def _on_star_toggled(checked, n=coin.name, btn=star_btn):
+                    self.toggle_favorite(n, checked)
+                    btn.setIcon(self._star_icon_yellow if checked else self._star_icon_grey)
+
+                star_btn.toggled.connect(_on_star_toggled)
+
+                coin_label = QLabel(coin.name)
+                coin_label.setObjectName("coin_name_label")  # <— чтобы надёжно находить строку
+                coin_label.setFont(QFont("Arial", 10, QFont.Bold))
+                coin_label.setStyleSheet("background-color: transparent;")
+                coin_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
+
                 copy_btn = QPushButton()
                 copy_btn.setFixedSize(24, 24)
                 copy_btn.setStyleSheet("""
@@ -1153,30 +1161,44 @@ class ProfileTab(QWidget):
                 copy_btn.setToolTip("Копировать название")
                 copy_btn.clicked.connect(lambda _, name=coin.name: self.copy_coin_name_from_table(name))
 
+                coin_layout.addWidget(star_btn)
                 coin_layout.addWidget(coin_label)
-                # Добавляем отступ перед кнопкой
                 coin_layout.addSpacing(8)
                 coin_layout.addWidget(copy_btn)
+
+                # ▼ новая плоская allow/deny-иконка без кружка
+                row_metascalp_btn = QPushButton()
+                row_metascalp_btn.setFixedSize(24, 24)
+                row_metascalp_btn.setCheckable(True)
+                self._apply_metascalp_icon(row_metascalp_btn, True)  # по умолчанию allowed.png
+                row_metascalp_btn.clicked.connect(self._toggle_metascalp)
+                coin_layout.addWidget(row_metascalp_btn)
+
                 coin_layout.addStretch()
-            else:
-                coin_layout.addWidget(coin_label)
 
-            self.table.setCellWidget(row_idx, 0, coin_widget)
+                self.table.setCellWidget(row_idx, 0, coin_widget)
 
-            # Колонка со спотовыми биржами
-            spot_item = QTableWidgetItem(coin.spot_exchanges or "")
-            spot_item.setToolTip(coin.spot_exchanges)
-            self.table.setItem(row_idx, 1, spot_item)
+                spot_item = QTableWidgetItem(coin.spot_exchanges or "")
+                spot_item.setToolTip(coin.spot_exchanges or "")
+                self.table.setItem(row_idx, 1, spot_item)
 
-            # Колонка с фьючерсными биржами
-            futures_item = QTableWidgetItem(coin.futures_exchanges or "")
-            futures_item.setToolTip(coin.futures_exchanges)
-            self.table.setItem(row_idx, 2, futures_item)
+                futures_item = QTableWidgetItem(coin.futures_exchanges or "")
+                futures_item.setToolTip(coin.futures_exchanges or "")
+                self.table.setItem(row_idx, 2, futures_item)
+                sort_key = f"{0 if getattr(coin, 'favorite', False) else 1}_{coin.name}"
+                sort_item = QTableWidgetItem(sort_key)
+                sort_item.setFlags(Qt.ItemIsEnabled)  # не редактируется
+                self.table.setItem(row_idx, 3, sort_item)
+        finally:
+            self.table.setSortingEnabled(True)
+            self.table.sortItems(3, Qt.AscendingOrder)
+            self.table.setUpdatesEnabled(True)
 
     def reset_filters(self):
         self.coin_search_input.clear()
         self.trade_type.setCurrentIndex(0)
         self.exclusive_check.setChecked(False)
+        self.favorites_only_check.setChecked(False)
         self.exchange_filter.set_exchanges(self.get_unique_exchanges())
         self.apply_filter()
 
@@ -1188,14 +1210,264 @@ class ProfileTab(QWidget):
 
     def copy_coin_name_from_table(self, name):
         pyperclip.copy(f"{name}USDT")
-        # Находим кнопку, которая вызвала это действие
         for i in range(self.table.rowCount()):
             widget = self.table.cellWidget(i, 0)
             if widget:
-                copy_btn = widget.findChild(QPushButton)
+                copy_btn = None
+                # найдём кнопку копирования внутри ячейки (второй QPushButton после звезды)
+                buttons = widget.findChildren(QPushButton)
+                if len(buttons) >= 2:
+                    copy_btn = buttons[1]
                 if copy_btn and copy_btn == self.sender():
+                    self.table.selectRow(i)
                     self.copy_notification.show_notification(copy_btn)
                     break
+
+    def export_filtered_tickers(self):
+        if not hasattr(self, 'filtered_results') or not self.filtered_results:
+            QMessageBox.warning(self, "Ошибка", "Нет отфильтрованных данных для экспорта")
+            return
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, "Сохранить тикеры", "", "Text Files (*.txt)"
+        )
+        if not file_path:
+            return
+
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                for coin in self.filtered_results:
+                    f.write(f"{coin.name}\n")
+            QMessageBox.information(self, "Успех", f"Тикеры сохранены в файл: {file_path}")
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Ошибка при сохранении файла: {str(e)}")
+
+    def delete_coin_by_name(self, name: str):
+        reply = QMessageBox.question(
+            self,
+            "Подтверждение удаления",
+            f"Вы действительно хотите удалить {name} из списка?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            try:
+                if self.db.delete_coin(name):
+                    self.update_exchange_list()
+                    # удалим строку из таблицы и кэша, без полной перерисовки
+                    row = self._find_row_by_name(name)
+                    if row is not None:
+                        self.table.setUpdatesEnabled(False)
+                        try:
+                            self.table.removeRow(row)
+                            self.filtered_results = [c for c in self.filtered_results if c.name != name]
+                        finally:
+                            self.table.setUpdatesEnabled(True)
+                    QMessageBox.information(self, "Удалено", f"{name} удалён из базы.")
+                else:
+                    QMessageBox.information(self, "Информация", f"{name} не найден в базе.")
+            except Exception as e:
+                QMessageBox.critical(self, "Ошибка", f"Не удалось удалить {name}: {str(e)}")
+
+    def delete_selected_coins(self):
+        # собрать выбранные строки (уникальные индексы)
+        rows = sorted({i.row() for i in self.table.selectedIndexes()})
+        if not rows:
+            return
+        names = []
+        for r in rows:
+            w = self.table.cellWidget(r, 0)
+            if not w:
+                continue
+            lbl = w.findChild(QLabel, "coin_name_label")
+            if lbl:
+                names.append(lbl.text())
+        if not names:
+            return
+        reply = QMessageBox.question(
+            self,
+            "Подтверждение удаления",
+            f"Вы уверены, что хотите удалить выделенные тикеры? ({len(names)} шт.)",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if reply != QMessageBox.Yes:
+            return
+        self.table.setUpdatesEnabled(False)
+        try:
+            for name in names:
+                try:
+                    self.db.delete_coin(name)
+                except Exception:
+                    pass
+            # пересобрать таблицу
+            self.update_exchange_list()
+            self.apply_filter()
+        finally:
+            self.table.setUpdatesEnabled(True)
+        QMessageBox.information(self, "Готово", f"Удалено: {len(names)}")
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_C and (event.modifiers() & Qt.ControlModifier):
+            selected_items = self.table.selectedItems()
+            if selected_items:
+                row = selected_items[0].row()
+                if 0 <= row < len(self.filtered_results):
+                    coin_name = self.filtered_results[row].name
+                    pyperclip.copy(f"{coin_name}USDT")
+                    rect = self.table.visualItemRect(selected_items[0])
+                    pos = self.table.mapToGlobal(rect.topLeft())
+                    self.copy_notification.show_notification_at_pos(pos)
+
+        elif event.key() == Qt.Key_Delete:
+            # если выбрано много — удалим списком
+            if len({i.row() for i in self.table.selectedIndexes()}) > 1:
+                self.delete_selected_coins()
+            else:
+                selected_items = self.table.selectedItems()
+                if selected_items:
+                    row = selected_items[0].row()
+                    if 0 <= row < len(self.filtered_results):
+                        coin_name = self.filtered_results[row].name
+                        self.delete_coin_by_name(coin_name)
+
+        super().keyPressEvent(event)
+
+    # ------- ИЗБРАННОЕ: быстрая смена и перенос строки без полной перерисовки -------
+
+    def toggle_favorite(self, name: str, is_favorite: bool):
+        try:
+            # 1) пишем в БД
+            if hasattr(self, 'db') and self.db:
+                self.db.set_favorite(name, is_favorite)
+
+            # 2) обновляем кэш
+            for c in self.filtered_results:
+                if c.name == name:
+                    c.favorite = bool(is_favorite)
+                    break
+
+            # 3) синхронизируем строку таблицы (иконка⭐, sort key)
+            row = self._find_row_by_name(name)
+
+            # фильтр «только избранное»
+            if hasattr(self, 'favorites_only_check') and self.favorites_only_check.isChecked():
+                if not is_favorite and row is not None:
+                    self.table.removeRow(row)
+                    self.filtered_results = [c for c in self.filtered_results if c.name != name]
+                    return
+                if is_favorite and row is None:
+                    self.apply_filter()
+                    return
+
+            if row is not None:
+                w = self.table.cellWidget(row, 0)
+                if w:
+                    for b in w.findChildren(QPushButton):
+                        if b.isCheckable():
+                            b.blockSignals(True)
+                            b.setChecked(is_favorite)
+                            b.setIcon(self._star_icon_yellow if is_favorite else self._star_icon_grey)
+                            b.blockSignals(False)
+                            break
+
+                key_item = self.table.item(row, 3)
+                if key_item is None:
+                    key_item = QTableWidgetItem()
+                    key_item.setFlags(Qt.ItemIsEnabled)
+                    self.table.setItem(row, 3, key_item)
+                key_item.setText(f"{0 if is_favorite else 1}_{name}")
+                self.table.sortItems(3, Qt.AscendingOrder)
+            else:
+                self.apply_filter()
+
+        except Exception as e:
+            QMessageBox.warning(self, "Ошибка", f"Не удалось изменить избранное для {name}: {str(e)}")
+
+    def toggle_favorite_single(self, checked: bool):
+        """Клик по ⭐ в одиночном блоке: пишем в БД, синхроним таблицу и саму кнопку."""
+        name = self.coin_name_value.text().strip()
+        if not name:
+            return
+        try:
+            self.toggle_favorite(name, bool(checked))
+            self.single_star_btn.setIcon(self._star_icon_yellow if checked else self._star_icon_grey)
+        except Exception as e:
+            QMessageBox.warning(self, "Ошибка", f"Не удалось изменить избранное для {name}: {str(e)}")
+            self.single_star_btn.blockSignals(True)
+            self.single_star_btn.setChecked(not checked)
+            self.single_star_btn.setIcon(self._star_icon_yellow if self.single_star_btn.isChecked() else self._star_icon_grey)
+            self.single_star_btn.blockSignals(False)
+
+    def _find_row_by_name(self, name: str):
+        for i in range(self.table.rowCount()):
+            w = self.table.cellWidget(i, 0)
+            if not w:
+                continue
+            lbl = w.findChild(QLabel, "coin_name_label")
+            if lbl and lbl.text() == name:
+                return i
+        return None
+
+    # ------- ИКОНКИ ЗВЕЗДЫ: контур + заливка -------
+
+    def _build_star_icons_from_outline(self):
+        path = "icons/icon_star.png"
+        base = QPixmap(path)
+        if base.isNull():
+            self._star_icon_grey = QIcon()
+            self._star_icon_yellow = QIcon()
+            return
+
+        # серая — просто окрашенный контур
+        self._star_icon_grey = self._tint_outline(base, QColor("#777777"))
+
+        # жёлтая — заливка звездой + контур сверху
+        filled = QPixmap(base.size())
+        filled.fill(Qt.transparent)
+
+        self._paint_star_fill(filled, QColor("#FFD700"))  # заливка
+        painter = QPainter(filled)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setCompositionMode(QPainter.CompositionMode_SourceOver)
+        painter.drawPixmap(0, 0, self._tinted_pixmap(base, QColor("#FFC107")))  # контур
+        painter.end()
+
+        self._star_icon_yellow = QIcon(filled)
+
+    def _tinted_pixmap(self, pix: QPixmap, color: QColor) -> QPixmap:
+        result = QPixmap(pix.size())
+        result.fill(Qt.transparent)
+        p = QPainter(result)
+        p.fillRect(result.rect(), color)
+        p.setCompositionMode(QPainter.CompositionMode_DestinationIn)
+        p.drawPixmap(0, 0, pix)
+        p.end()
+        return result
+
+    def _tint_outline(self, pix: QPixmap, color: QColor) -> QIcon:
+        return QIcon(self._tinted_pixmap(pix, color))
+
+    def _paint_star_fill(self, target: QPixmap, fill_color: QColor):
+        w, h = target.width(), target.height()
+        cx, cy = w / 2.0, h / 2.0
+        margin = min(w, h) * 0.12
+        r_outer = (min(w, h) / 2.0) - margin
+        r_inner = r_outer * 0.5
+
+        pts = []
+        for i in range(10):
+            angle = (math.pi / 2) + i * (math.pi / 5)
+            r = r_outer if i % 2 == 0 else r_inner
+            x = cx + r * math.cos(angle)
+            y = cy - r * math.sin(angle)
+            pts.append(QPointF(x, y))
+
+        poly = QPolygonF(pts)
+        p = QPainter(target)
+        p.setRenderHint(QPainter.Antialiasing, True)
+        p.setPen(Qt.NoPen)
+        p.setBrush(QBrush(fill_color))
+        p.drawPolygon(poly)
+        p.end()
 
 
 CLICKER_OPENED = False
@@ -1204,7 +1476,6 @@ CLICKER_OPENED = False
 class CryptoApp(QMainWindow):
     def __init__(self):
         super().__init__()
-        # Инициализация атрибутов для переименования вкладок
         self.renaming_tab_index = -1
         self.rename_edit = None
         self.is_renaming = False
@@ -1217,7 +1488,6 @@ class CryptoApp(QMainWindow):
         self.clicker_window = None
 
     def init_ui(self):
-        # Увеличиваем минимальный размер окна для лучшего отображения данных
         self.setMinimumSize(1000, 900)
 
         central_widget = QWidget()
@@ -1227,14 +1497,12 @@ class CryptoApp(QMainWindow):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Верхняя панель
         header = QWidget()
         header.setFixedHeight(50)
         header.setStyleSheet("background-color: #333333;")
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(20, 0, 20, 0)
 
-        # Название приложения
         logo_layout = QHBoxLayout()
         logo_label = QLabel("Crypto Shah Scanner")
         logo_label.setStyleSheet("""
@@ -1246,14 +1514,11 @@ class CryptoApp(QMainWindow):
         logo_layout.addWidget(logo_label)
         header_layout.addLayout(logo_layout)
 
-        # Центральное пространство
         header_layout.addStretch()
 
-        # Кнопки управления профилями
         btn_layout = QHBoxLayout()
         btn_layout.setSpacing(10)
 
-        # Кнопка "+" для создания новой вкладки (как в браузере)
         self.new_tab_btn = QPushButton("+")
         self.new_tab_btn.setFixedSize(36, 36)
         self.new_tab_btn.setToolTip("Новая вкладка")
@@ -1311,7 +1576,6 @@ class CryptoApp(QMainWindow):
 
         btn_layout.addWidget(self.copy_profile_btn)
         btn_layout.addWidget(self.delete_profile_btn)
-        header_layout.addLayout(btn_layout)
 
         self.freak_parser_btn = QPushButton()
         self.freak_parser_btn.setFixedSize(36, 36)
@@ -1331,15 +1595,9 @@ class CryptoApp(QMainWindow):
                 background-color: #555555;
             }
         """)
-
         self.freak_parser_btn.clicked.connect(self.open_freak_parser)
         btn_layout.addWidget(self.freak_parser_btn)
 
-        btn_layout.addWidget(self.copy_profile_btn)
-        btn_layout.addWidget(self.delete_profile_btn)
-        header_layout.addLayout(btn_layout)
-
-        # Кнопка закрепления с иконкой
         self.pin_button = QPushButton()
         self.pin_button.setCheckable(True)
         self.pin_button.setFixedSize(36, 36)
@@ -1385,15 +1643,14 @@ class CryptoApp(QMainWindow):
         self.clicker_btn.clicked.connect(self.open_clicker)
         header_layout.addWidget(self.clicker_btn)
 
+        header_layout.addLayout(btn_layout)
         main_layout.addWidget(header)
 
-        # Основная область с вкладками
         self.tab_widget = QTabWidget()
         self.tab_widget.setTabsClosable(True)
         self.tab_widget.tabCloseRequested.connect(self.close_tab)
         self.tab_widget.setMovable(True)
 
-        # Настраиваем иконку закрытия вкладок
         close_icon_style = """
             QTabBar::close-button {
                 image: url(icons/icon_X.png);
@@ -1436,16 +1693,12 @@ class CryptoApp(QMainWindow):
             {close_icon_style}
         """)
 
-        # Обработка двойного клика для переименования вкладки
         self.tab_widget.tabBar().installEventFilter(self)
-
-        # Устанавливаем фильтр событий для всего приложения
         QApplication.instance().installEventFilter(self)
 
         main_layout.addWidget(self.tab_widget, 1)
 
     def open_freak_parser(self):
-        # Проверяем, не открыт ли уже парсер и существует ли окно
         if hasattr(self, 'freak_parser_window') and self.freak_parser_window is not None:
             try:
                 if self.freak_parser_window.isVisible():
@@ -1453,18 +1706,14 @@ class CryptoApp(QMainWindow):
                     self.freak_parser_window.activateWindow()
                     return
                 else:
-                    # Окно существует, но не видимо (возможно, закрыто) - удаляем ссылку
                     self.freak_parser_window = None
             except:
-                # Если произошла ошибка при проверке окна (например, оно было закрыто)
                 self.freak_parser_window = None
 
-        # Если окно не открыто, создаем новое
         if not hasattr(self, 'freak_parser_window') or self.freak_parser_window is None:
             try:
                 from freak_parser import TradingViewParserGUI
                 self.freak_parser_window = TradingViewParserGUI()
-                # Подключаем сигнал на закрытие окна, чтобы обнулить ссылку
                 self.freak_parser_window.finished.connect(lambda: setattr(self, 'freak_parser_window', None))
                 self.freak_parser_window.show()
             except Exception as e:
@@ -1473,16 +1722,12 @@ class CryptoApp(QMainWindow):
 
     def open_clicker(self):
         global CLICKER_OPENED
-
         if CLICKER_OPENED:
             QMessageBox.information(self, "Информация", "Кликер уже открыт!")
             return
-
         self.clicker_window = ClickerWindow()
         self.clicker_window.show()
         CLICKER_OPENED = True
-
-        # Подключаем сигнал на закрытие окна кликера
         self.clicker_window.destroyed.connect(self.on_clicker_closed)
 
     def on_clicker_closed(self):
@@ -1490,7 +1735,6 @@ class CryptoApp(QMainWindow):
         CLICKER_OPENED = False
 
     def show_new_tab_menu(self):
-        """Показывает меню для создания новой вкладки"""
         menu = QMenu(self)
         menu.setStyleSheet("""
             QMenu {
@@ -1507,15 +1751,12 @@ class CryptoApp(QMainWindow):
             }
         """)
 
-        # Пункт для создания нового профиля
         new_action = menu.addAction("➕ Создать новый профиль")
         new_action.triggered.connect(self.create_new_profile)
 
         menu.addSeparator()
 
-        # Пункты для открытия существующих профилей
         profiles = Database.list_profiles()
-
         if not profiles:
             action = menu.addAction("Нет доступных профилей")
             action.setEnabled(False)
@@ -1527,56 +1768,41 @@ class CryptoApp(QMainWindow):
         menu.exec_(self.new_tab_btn.mapToGlobal(QPoint(0, self.new_tab_btn.height())))
 
     def open_profile(self, profile_name):
-        """Открывает профиль в новой вкладке"""
-        # Проверяем, не открыт ли уже этот профиль
         for i in range(self.tab_widget.count()):
             if self.tab_widget.tabText(i) == profile_name:
                 self.tab_widget.setCurrentIndex(i)
                 return
-
-        # Если не открыт, создаем новую вкладку
         self.add_profile_tab(profile_name)
 
     def eventFilter(self, source, event):
-        # Обработка двойного клика для переименования вкладки
-        if (event.type() == QEvent.MouseButtonDblClick and
-                source is self.tab_widget.tabBar()):
+        if (event.type() == QEvent.MouseButtonDblClick and source is self.tab_widget.tabBar()):
             index = source.tabAt(event.pos())
             if index >= 0:
                 self.start_rename_tab(index)
                 return True
 
-        # Обработка клика вне поля редактирования для завершения переименования
-        if (self.is_renaming and event.type() == QEvent.MouseButtonPress and
-                source is not self.rename_edit):
+        if (self.is_renaming and event.type() == QEvent.MouseButtonPress and source is not self.rename_edit):
             self.finish_rename_tab()
             return True
 
-        # Обработка потери фокуса при переименовании
-        if (self.is_renaming and source is self.rename_edit and
-                event.type() == QEvent.FocusOut):
+        if (self.is_renaming and source is self.rename_edit and event.type() == QEvent.FocusOut):
             self.finish_rename_tab()
             return True
 
-        # Обработка нажатия Esc для отмены переименования
-        if (self.is_renaming and event.type() == QEvent.KeyPress and
-                event.key() == Qt.Key_Escape):
+        if (self.is_renaming and event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape):
             self.cancel_rename_tab()
             return True
 
         return super().eventFilter(source, event)
 
     def start_rename_tab(self, index):
-        # Закрываем предыдущее поле редактирования, если оно есть
         if self.rename_edit:
             self.finish_rename_tab()
 
-        # Начинаем переименование вкладки
         self.renaming_tab_index = index
         self.is_renaming = True
         old_name = self.tab_widget.tabText(index)
 
-        # Создаем поле редактирования
         self.rename_edit = QLineEdit(old_name)
         self.rename_edit.setStyleSheet("""
             QLineEdit {
@@ -1590,12 +1816,10 @@ class CryptoApp(QMainWindow):
         self.rename_edit.selectAll()
         self.rename_edit.returnPressed.connect(self.finish_rename_tab)
 
-        # Заменяем вкладку на поле редактирования
         self.tab_widget.tabBar().setTabButton(index, QTabBar.LeftSide, None)
         self.tab_widget.tabBar().setTabButton(index, QTabBar.RightSide, None)
         self.tab_widget.tabBar().setTabText(index, "")
 
-        # Размещаем поле редактирования на вкладке
         tab_rect = self.tab_widget.tabBar().tabRect(index)
         self.rename_edit.setParent(self.tab_widget.tabBar())
         self.rename_edit.setGeometry(tab_rect)
@@ -1607,9 +1831,7 @@ class CryptoApp(QMainWindow):
             new_name = self.rename_edit.text().strip()
             old_name = self.tab_widget.tabText(self.renaming_tab_index)
 
-            # Если имя изменилось, применяем изменения
             if new_name and new_name != old_name:
-                # Проверяем уникальность имени
                 unique = True
                 for i in range(self.tab_widget.count()):
                     if i != self.renaming_tab_index and self.tab_widget.tabText(i) == new_name:
@@ -1617,31 +1839,22 @@ class CryptoApp(QMainWindow):
                         break
 
                 if unique:
-                    # Переименовываем вкладку
                     self.tab_widget.setTabText(self.renaming_tab_index, new_name)
-
-                    # Переименовываем файл базы данных
                     try:
                         tab = self.tab_widget.widget(self.renaming_tab_index)
                         if hasattr(tab, 'db'):
-                            # Переименовываем файл БД
-                            old_db_path = tab.db.filename
-                            new_db_path = os.path.join(os.path.dirname(old_db_path), f"{new_name}.json")
+                            try:
+                                tab.db.rename_profile(new_name)
+                                tab.profile_name = new_name
+                            except Exception as e:
+                                QMessageBox.warning(self, "Ошибка", f"Не удалось переименовать профиль: {str(e)}")
+                                self.tab_widget.setTabText(self.renaming_tab_index, old_name)
+                                return
 
-                            # Переименовываем файл
-                            if os.path.exists(old_db_path):
-                                os.rename(old_db_path, new_db_path)
-
-                            # Обновляем путь к файлу в объекте БД
-                            tab.db.filename = new_db_path
-                            tab.db.profile_name = new_name
-                            tab.profile_name = new_name
                     except Exception as e:
                         QMessageBox.warning(self, "Ошибка", f"Не удалось переименовать профиль: {str(e)}")
-                        # Восстанавливаем старое имя в случае ошибки
                         self.tab_widget.setTabText(self.renaming_tab_index, old_name)
 
-            # Восстанавливаем обычный вид вкладки
             self.restore_tab_buttons(self.renaming_tab_index)
 
             try:
@@ -1656,30 +1869,21 @@ class CryptoApp(QMainWindow):
             self.is_renaming = False
 
     def cancel_rename_tab(self):
-        """Отмена переименования вкладки"""
         if self.renaming_tab_index >= 0:
-            # Восстанавливаем исходное имя
             old_name = self.tab_widget.tabText(self.renaming_tab_index)
             self.tab_widget.setTabText(self.renaming_tab_index, old_name)
-
-            # Восстанавливаем обычный вид вкладки
             self.restore_tab_buttons(self.renaming_tab_index)
-
             try:
                 if self.rename_edit:
                     self.rename_edit.hide()
                     self.rename_edit.deleteLater()
             except:
                 pass
-
             self.rename_edit = None
             self.renaming_tab_index = -1
             self.is_renaming = False
 
     def restore_tab_buttons(self, index):
-        """Восстанавливает кнопки закрытия для вкладки"""
-        # В QTabBar кнопки закрытия создаются автоматически при установке setTabsClosable(True)
-        # Просто обновляем вкладку, чтобы восстановить кнопки
         self.tab_widget.setTabsClosable(False)
         self.tab_widget.setTabsClosable(True)
 
@@ -1701,12 +1905,10 @@ class CryptoApp(QMainWindow):
         """)
 
     def add_profile_tab(self, profile_name):
-        # Проверяем, что профиль еще не открыт
         for i in range(self.tab_widget.count()):
             if self.tab_widget.tabText(i) == profile_name:
                 self.tab_widget.setCurrentIndex(i)
-                return  # Профиль уже открыт
-
+                return
         tab = ProfileTab(profile_name)
         index = self.tab_widget.addTab(tab, profile_name)
         self.tab_widget.setCurrentIndex(index)
@@ -1723,21 +1925,19 @@ class CryptoApp(QMainWindow):
             if not ok or not name:
                 return
 
-        # Проверяем уникальность имени
         for i in range(self.tab_widget.count()):
             if self.tab_widget.tabText(i) == name:
                 QMessageBox.warning(self, "Ошибка", "Профиль с таким именем уже открыт!")
                 return
 
         db = Database(name)
-        db.save()  # Создаем пустой файл
+        db.save()
         self.add_profile_tab(name)
 
     def copy_current_profile(self):
         current_index = self.tab_widget.currentIndex()
         if current_index < 0:
             return
-
         current_name = self.tab_widget.tabText(current_index)
         new_name, ok = QInputDialog.getText(
             self,
@@ -1747,56 +1947,44 @@ class CryptoApp(QMainWindow):
         )
         if not ok or not new_name:
             return
-
-        # Проверяем уникальность имени
         for i in range(self.tab_widget.count()):
             if self.tab_widget.tabText(i) == new_name:
                 QMessageBox.warning(self, "Ошибка", "Профиль с таким именем уже открыт!")
                 return
 
-        # Копируем БД
         current_db = Database(current_name)
         new_db = current_db.copy_profile(new_name)
-
-        # Добавляем новую вкладку
         self.add_profile_tab(new_name)
 
     def delete_current_profile(self):
         current_index = self.tab_widget.currentIndex()
         if current_index < 0:
             return
-
         if self.tab_widget.count() <= 1:
             QMessageBox.warning(self, "Ошибка", "Нельзя удалить последний профиль!")
             return
 
         profile_name = self.tab_widget.tabText(current_index)
-
-        # Добавляем диалог подтверждения удаления
         reply = QMessageBox.question(
             self,
             "Подтверждение удаления",
             f"Вы уверены, что хотите удалить профиль '{profile_name}'? Это действие нельзя отменить.",
             QMessageBox.Yes | QMessageBox.No
         )
-
         if reply == QMessageBox.No:
             return
 
-        # Удаляем файл базы данных
         try:
             db = Database(profile_name)
             db.delete_profile()
         except Exception as e:
             QMessageBox.warning(self, "Ошибка", f"Не удалось удалить файл профиля: {str(e)}")
 
-        # Закрываем вкладку
         widget = self.tab_widget.widget(current_index)
         widget.deleteLater()
         self.tab_widget.removeTab(current_index)
 
     def close_tab(self, index):
-        # Просто закрываем вкладку без диалога подтверждения
         widget = self.tab_widget.widget(index)
         widget.deleteLater()
         self.tab_widget.removeTab(index)
@@ -1833,6 +2021,9 @@ class CryptoApp(QMainWindow):
 
 
 if __name__ == "__main__":
+    import multiprocessing as mp
+    mp.freeze_support()
+
     if len(sys.argv) > 1 and sys.argv[1] == "--worker":
         if len(sys.argv) < 3:
             print(json.dumps({"error": "Не указано название монеты"}))
@@ -1852,7 +2043,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
 
-    # Устанавливаем темную тему для всего приложения
     app.setStyleSheet("""
         QWidget {
             background-color: #1E1E1E;
